@@ -14,24 +14,24 @@ class RiskEngine:
             MachineParameter.machine_id == machine_id
         ).order_by(MachineParameter.timestamp.desc()).first()
 
-        vibration = latest_param.vibration if latest_param else 2.0
-        temp = latest_param.temperature if latest_param else 65.0
+        vibration = latest_param.vibration if latest_param else None
+        temp = latest_param.temperature if latest_param else None
 
         score = 10
         signals = []
 
         # 1. Parameter deviation check
-        if vibration > 4.0:
+        if vibration is not None and vibration > 4.0:
             score += 40
             signals.append(f"Critical Vibration Deviation: {vibration} mm/s (+92% above 2.5 mm/s baseline)")
-        elif vibration > 2.5:
+        elif vibration is not None and vibration > 2.5:
             score += 20
             signals.append(f"Moderate Vibration Elevation: {vibration} mm/s")
 
-        if temp > 75.0:
+        if temp is not None and temp > 75.0:
             score += 25
             signals.append(f"High Temperature Warning: {temp}°C")
-        elif temp > 70.0:
+        elif temp is not None and temp > 70.0:
             score += 15
             signals.append(f"Elevated Temperature: {temp}°C")
 
@@ -61,7 +61,7 @@ class RiskEngine:
             level = "LOW"
 
         if not signals:
-            signals.append("All operational parameters remain within safe baseline limits.")
+            signals.append("No elevated risk signal is available from recorded telemetry." if latest_param is None else "Recorded operational parameters remain within configured baseline limits.")
 
         return {
             "machine_id": machine_id,
@@ -69,7 +69,7 @@ class RiskEngine:
             "risk_score": score,
             "risk_level": level,
             "contributing_signals": signals,
-            "is_demo_assessment": True
+            "is_demo_assessment": latest_param is None
         }
 
 risk_engine = RiskEngine()
