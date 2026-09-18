@@ -286,7 +286,7 @@ export const ReinspectionPage: React.FC<ReinspectionPageProps> = ({ onNavigate, 
                   <div style={{ backgroundColor: '#162235', padding: '0.5rem', borderRadius: '4px' }}>
                     <span style={{ fontSize: '0.7rem', color: '#8D9AAA', display: 'block' }}>Vibration Drop</span>
                     <strong style={{ fontSize: '0.9rem', color: isVerified ? '#22A06B' : '#E55353' }}>
-                      {reinspectionResult.before_condition?.vibration || '4.8 mm/s'} → {reinspectionResult.after_condition?.vibration || (isVerified ? '2.7 mm/s' : '4.8 mm/s')}
+                      {reinspectionResult.before_condition?.vibration || 'N/A'} → {reinspectionResult.after_condition?.vibration || 'N/A'}
                     </strong>
                   </div>
                   <div style={{ backgroundColor: '#162235', padding: '0.5rem', borderRadius: '4px' }}>
@@ -359,10 +359,10 @@ export const ReinspectionPage: React.FC<ReinspectionPageProps> = ({ onNavigate, 
                   <tr style={{ borderBottom: '1px solid #162235' }}>
                     <td style={{ padding: '0.6rem 0.8rem', color: '#E8EDF3' }}>Temperature</td>
                     <td style={{ padding: '0.6rem 0.8rem', color: '#E55353', fontWeight: 600 }}>
-                      {reinspectionResult.before_condition?.temperature || '72°C'}
+                      {reinspectionResult.before_condition?.temperature || 'N/A'}
                     </td>
                     <td style={{ padding: '0.6rem 0.8rem', color: isVerified ? '#22A06B' : '#E55353', fontWeight: 600 }}>
-                      {reinspectionResult.after_condition?.temperature || (isVerified ? '68°C' : '72°C')}
+                      {reinspectionResult.after_condition?.temperature || 'N/A'}
                     </td>
                     <td style={{ padding: '0.6rem 0.8rem' }}>
                       <span style={{ fontSize: '0.7rem', color: isVerified ? '#22A06B' : '#E55353' }}>
@@ -373,10 +373,10 @@ export const ReinspectionPage: React.FC<ReinspectionPageProps> = ({ onNavigate, 
                   <tr>
                     <td style={{ padding: '0.6rem 0.8rem', color: '#E8EDF3' }}>Machine Risk</td>
                     <td style={{ padding: '0.6rem 0.8rem', color: '#E55353', fontWeight: 600 }}>
-                      {reinspectionResult.before_condition?.risk || 'HIGH'}
+                      {reinspectionResult.before_condition?.risk || 'N/A'}
                     </td>
                     <td style={{ padding: '0.6rem 0.8rem', color: isVerified ? '#22A06B' : '#E55353', fontWeight: 600 }}>
-                      {reinspectionResult.after_condition?.risk || (isVerified ? 'NORMAL' : 'HIGH')}
+                      {reinspectionResult.after_condition?.risk || 'N/A'}
                     </td>
                     <td style={{ padding: '0.6rem 0.8rem' }}>
                       <span style={{ fontSize: '0.7rem', color: isVerified ? '#22A06B' : '#E55353' }}>
@@ -406,10 +406,10 @@ export const ReinspectionPage: React.FC<ReinspectionPageProps> = ({ onNavigate, 
                   <tr style={{ borderBottom: '1px solid #162235' }}>
                     <td style={{ padding: '0.6rem 0.8rem', color: '#E8EDF3' }}>Defect Detected</td>
                     <td style={{ padding: '0.6rem 0.8rem', color: '#E55353', fontWeight: 600 }}>
-                      {reinspectionResult.before_condition?.defect || 'Scratch'}
+                      {reinspectionResult.before_condition?.defect || 'N/A'}
                     </td>
                     <td style={{ padding: '0.6rem 0.8rem', color: reinspectionResult.status === 'PASSED' ? '#22A06B' : '#E55353', fontWeight: 600 }}>
-                      {reinspectionResult.after_condition?.defect || (reinspectionResult.status === 'PASSED' ? 'None' : 'Scratch')}
+                      {reinspectionResult.after_condition?.defect || 'N/A'}
                     </td>
                     <td style={{ padding: '0.6rem 0.8rem' }}>
                       <span style={{ fontSize: '0.7rem', color: reinspectionResult.status === 'PASSED' ? '#22A06B' : '#E55353' }}>
@@ -420,10 +420,10 @@ export const ReinspectionPage: React.FC<ReinspectionPageProps> = ({ onNavigate, 
                   <tr style={{ borderBottom: '1px solid #162235' }}>
                     <td style={{ padding: '0.6rem 0.8rem', color: '#E8EDF3' }}>Severity</td>
                     <td style={{ padding: '0.6rem 0.8rem', color: '#E55353', fontWeight: 600 }}>
-                      {reinspectionResult.before_condition?.severity || 'Medium'}
+                      {reinspectionResult.before_condition?.severity || 'N/A'}
                     </td>
                     <td style={{ padding: '0.6rem 0.8rem', color: reinspectionResult.status === 'PASSED' ? '#22A06B' : '#E55353', fontWeight: 600 }}>
-                      {reinspectionResult.after_condition?.severity || (reinspectionResult.status === 'PASSED' ? 'None' : 'Medium')}
+                      {reinspectionResult.after_condition?.severity || 'N/A'}
                     </td>
                     <td style={{ padding: '0.6rem 0.8rem' }}>
                       <span style={{ fontSize: '0.7rem', color: reinspectionResult.status === 'PASSED' ? '#22A06B' : '#E55353' }}>
