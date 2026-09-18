@@ -93,8 +93,8 @@ async def analyze_uploaded_image(
     factory_telemetry = None
     factory_status = "Virtual Factory Offline"
     factory_source_label = "OFFLINE"
-    telemetry_data = {"temperature": 72.0, "vibration": 4.8, "pressure": 6.2, "speed": 1480, "status": "WARNING"}
-    environment_data = {"temperature": 29.0, "humidity": 68.0}
+    telemetry_data = None
+    environment_data = None
 
     raw_env_url = os.environ.get("LAPTOP2_URL", "http://10.10.56.118:8000").strip()
     urls_to_try = []
@@ -140,36 +140,36 @@ async def analyze_uploaded_image(
                         telemetry_data = data["telemetry"]
                     elif "temperature" in data or "vibration" in data:
                         telemetry_data = {
-                            "temperature": data.get("temperature", 72.0),
-                            "vibration": data.get("vibration", 4.8),
-                            "pressure": data.get("pressure", 6.2),
-                            "speed": data.get("speed", 1480),
-                            "status": data.get("status", "WARNING")
+                            "temperature": data.get("temperature"),
+                            "vibration": data.get("vibration"),
+                            "pressure": data.get("pressure"),
+                            "speed": data.get("speed"),
+                            "status": data.get("status", "UNKNOWN")
                         }
 
                     if "environment" in data and isinstance(data["environment"], dict):
                         environment_data = data["environment"]
                     else:
                         environment_data = {
-                            "temperature": data.get("env_temp", data.get("environment_temperature", 29.0)),
-                            "humidity": data.get("env_humidity", data.get("humidity", 68.0))
+                            "temperature": data.get("env_temp", data.get("environment_temperature")),
+                            "humidity": data.get("env_humidity", data.get("humidity"))
                         }
 
                     # Persist telemetry in MachineParameter table
                     new_param = MachineParameter(
                         machine_id=machine_id,
                         timestamp=now,
-                        temperature=float(telemetry_data.get("temperature", 72.0)),
-                        vibration=float(telemetry_data.get("vibration", 4.8)),
-                        pressure=float(telemetry_data.get("pressure", 6.2)),
-                        speed=int(telemetry_data.get("speed", 1480))
+                        temperature=float(telemetry_data["temperature"]),
+                        vibration=float(telemetry_data["vibration"]),
+                        pressure=float(telemetry_data["pressure"]),
+                        speed=int(telemetry_data["speed"])
                     )
                     db.add(new_param)
 
                     new_env = EnvironmentReading(
                         timestamp=now,
-                        temperature=float(environment_data.get("temperature", 29.0)),
-                        humidity=float(environment_data.get("humidity", 68.0))
+                        temperature=float(environment_data["temperature"]),
+                        humidity=float(environment_data["humidity"])
                     )
                     db.add(new_env)
                     db.flush()
@@ -258,8 +258,8 @@ async def analyze_uploaded_image(
         "raw_image_url": rel_raw_url,
         "annotated_image_url": vision_result["annotated_image_url"],
         "defects": saved_defects,
-        "telemetry": telemetry_data,
-        "environment": environment_data,
+        "telemetry": telemetry_data or {"status": "UNAVAILABLE", "message": "Virtual Factory telemetry unavailable; no synthetic telemetry substituted."},
+        "environment": environment_data or {"status": "UNAVAILABLE", "message": "Virtual Factory environment data unavailable."},
         "root_cause": {
             "probable_factor": rc_data["probable_factor"],
             "evidence": rc_data["evidence"],
