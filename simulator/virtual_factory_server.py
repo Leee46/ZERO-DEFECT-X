@@ -12,6 +12,8 @@ import datetime
 from typing import Dict, Any, Optional
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse, FileResponse
 from pydantic import BaseModel, Field
 
 app = FastAPI(
@@ -28,6 +30,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount Virtual Factory Visual Frontend at /factory/
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+factory_dir = os.path.join(base_dir, "frontend", "factory")
+if not os.path.exists(factory_dir):
+    factory_dir = os.path.join(os.getcwd(), "frontend", "factory")
+
+if os.path.exists(factory_dir):
+    app.mount("/factory", StaticFiles(directory=factory_dir, html=True), name="factory")
+
 
 # Simulated Factory State Store
 FACTORY_STATE = {

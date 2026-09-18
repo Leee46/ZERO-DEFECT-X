@@ -1,0 +1,293 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap');
+
+:root {
+  --bg-primary: #0A0E17;
+  --bg-card: #121C2C;
+  --bg-card-alt: #162235;
+  --border-color: #26364A;
+  --accent-blue: #4F7CAC;
+  --accent-cyan: #00D2FF;
+  --status-success: #22A06B;
+  --status-warning: #F59E0B;
+  --status-critical: #D9383A;
+  --text-main: #E8EDF3;
+  --text-muted: #8D9AAA;
+  --font-main: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+.scada-container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.scada-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.scada-title-box {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.scada-title-icon {
+  width: 42px;
+  height: 42px;
+  background-color: rgba(79, 124, 172, 0.15);
+  border: 1px solid var(--accent-blue);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-blue);
+}
+
+.scada-title-text h1 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #FFFFFF;
+}
+
+.scada-title-text p {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.sim-banner {
+  background: linear-gradient(90deg, rgba(79, 124, 172, 0.2) 0%, rgba(0, 210, 255, 0.1) 100%);
+  border: 1px solid var(--accent-blue);
+  color: #60A5FA;
+  padding: 0.65rem 1rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.sim-tag {
+  background-color: var(--accent-blue);
+  color: #000;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.scada-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 960px) {
+  .scada-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.scada-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  margin-bottom: 1.25rem;
+}
+
+.card-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-main);
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-transform: uppercase;
+}
+
+/* Process Pipeline visual */
+.pipeline-flow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.75rem 0.25rem;
+}
+
+.pipeline-node {
+  flex: 1;
+  min-width: 105px;
+  background-color: var(--bg-card-alt);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.65rem 0.5rem;
+  text-align: center;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.pipeline-node.active {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 10px rgba(79, 124, 172, 0.3);
+}
+
+.pipeline-node.warning {
+  border-color: var(--status-warning);
+  background-color: rgba(245, 158, 11, 0.1);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+}
+
+.pipeline-node-code {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.pipeline-node-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.pipeline-arrow {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+/* Sensor Meters */
+.meters-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .meters-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.meter-box {
+  background-color: var(--bg-card-alt);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.85rem;
+  text-align: center;
+}
+
+.meter-box.warning {
+  border-color: var(--status-warning);
+}
+
+.meter-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.meter-value {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0.3rem 0;
+}
+
+.meter-unit {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* Action Controls */
+.btn-control {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.btn-primary {
+  background-color: var(--accent-blue);
+  color: #FFFFFF;
+}
+
+.btn-primary:hover {
+  background-color: #3B6491;
+}
+
+.btn-warning {
+  background-color: var(--status-warning);
+  color: #000000;
+}
+
+.btn-warning:hover {
+  background-color: #D97706;
+}
+
+.btn-danger {
+  background-color: var(--status-critical);
+  color: #FFFFFF;
+}
+
+.btn-danger:hover {
+  background-color: #B91C1C;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.status-badge.online {
+  background-color: rgba(34, 160, 107, 0.2);
+  border: 1px solid var(--status-success);
+  color: var(--status-success);
+}
