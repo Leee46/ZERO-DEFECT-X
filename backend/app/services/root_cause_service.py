@@ -38,12 +38,12 @@ class ProbableCauseEngine:
 
         # Baseline parameters
         baseline = MACHINE_BASELINES.get(target_machine_id, {"vibration_max": 2.5, "temp_max": 70.0})
-        vib = latest_param.vibration if latest_param else 2.1
-        temp = latest_param.temperature if latest_param else 65.0
-        pressure = latest_param.pressure if latest_param else 6.0
-        speed = latest_param.speed if latest_param else 1500
-        env_temp = latest_env.temperature if latest_env else 25.0
-        env_hum = latest_env.humidity if latest_env else 60.0
+        vib = latest_param.vibration if latest_param else None
+        temp = latest_param.temperature if latest_param else None
+        pressure = latest_param.pressure if latest_param else None
+        speed = latest_param.speed if latest_param else None
+        env_temp = latest_env.temperature if latest_env else None
+        env_hum = latest_env.humidity if latest_env else None
 
         # Production context payload
         production_context = {
@@ -69,8 +69,8 @@ class ProbableCauseEngine:
                 "current_condition": f"Vibration {vib} mm/s | Temp {temp}°C | Pressure {pressure} bar",
                 "production_context": production_context,
                 "historical_comparison": {
-                    "normal_vibration_defect_rate": 0.5,
-                    "elevated_vibration_defect_rate": 0.0,
+                    "normal_vibration_defect_rate": None,
+                    "elevated_vibration_defect_rate": None,
                     "matching_historical_count": 0
                 },
                 "confidence": 0.95,
@@ -87,7 +87,7 @@ class ProbableCauseEngine:
         ).all()
 
         # Insufficient evidence check (<2 historical records)
-        if len(total_machine_inspections) < 2:
+        if len(total_machine_inspections) < 2 or latest_param is None:
             insufficient_factors = [
                 {"factor": "Insufficient Historical Records", "evidence_level": "LOW", "details": "Fewer than 2 historical inspections recorded for machine baseline calculation."}
             ]
@@ -123,7 +123,7 @@ class ProbableCauseEngine:
 
         # Factor 1: Machine Vibration Check
         vib_limit = baseline["vibration_max"]
-        if vib > vib_limit:
+        if vib is not None and vib > vib_limit:
             score = round(min(0.92, 0.70 + (vib - vib_limit) * 0.1), 2)
             candidate_factors.append({
                 "factor": f"Elevated Vibration on {target_machine_id}",
@@ -140,7 +140,7 @@ class ProbableCauseEngine:
 
         # Factor 2: Machine Temperature Check
         temp_limit = baseline["temp_max"]
-        if temp > temp_limit:
+        if temp is not None and temp > temp_limit:
             candidate_factors.append({
                 "factor": f"Elevated Thermal Reading on {target_machine_id}",
                 "evidence_level": "MODERATE",
@@ -194,7 +194,7 @@ class ProbableCauseEngine:
             "current_condition": f"Vibration {vib} mm/s | Temp {temp}°C | Pressure {pressure} bar | Speed {speed} RPM",
             "production_context": production_context,
             "historical_comparison": {
-                "normal_vibration_defect_rate": 1.2,
+                "normal_vibration_defect_rate": None,
                 "elevated_vibration_defect_rate": overall_defect_rate,
                 "matching_historical_count": len(total_machine_inspections)
             },
