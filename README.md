@@ -1,5 +1,4 @@
-# ZERO-DEFECT X
-### Vision-Based Defect Intelligence & Preventive Manufacturing System
+# ZERO-DEFECT X — Vision-Based Defect Intelligence & Preventive Manufacturing System
 
 > **Detect. Diagnose. Correct. Verify.**
 
@@ -12,27 +11,27 @@
 
 ## 1. Project Overview
 
-**ZERO-DEFECT X** is a closed-loop, vision-integrated SCADA quality control and industrial decision-support system. It connects real-time physical product image inspection with industrial process telemetry to correlate visual surface defects with machine parameter anomalies.
+**ZERO-DEFECT X** is a vision-based defect intelligence and preventive manufacturing decision-support system. It connects physical product image inspection with industrial process telemetry to correlate visual surface defects with machine parameter anomalies.
 
-Instead of treating defect detection as an isolated image classification task, ZERO-DEFECT X links computer vision inspection with production context (`SIMULATED FACTORY DATA`), performs statistical evidence-based root-cause correlation, tracks operator corrective maintenance actions, and executes closed-loop reinspection verification.
+Instead of treating quality control as an isolated image classification task, ZERO-DEFECT X links computer vision inspection with production context (`SIMULATED FACTORY DATA`), performs statistical evidence-based root-cause correlation, tracks operator corrective maintenance actions, and executes closed-loop reinspection verification.
 
 ---
 
-## 2. SI-03 Problem Statement
+## 2. Problem Statement
 
 In modern high-speed industrial manufacturing:
-- **Siloed Inspection**: Quality inspection stations detect surface defects after production, but lack immediate integration with machine sensor telemetry to explain why defects occur.
+- **Siloed Quality Inspection**: Quality inspection stations detect surface defects after production, but lack immediate integration with machine sensor telemetry to explain why defects occur.
 - **Unverified Maintenance**: Corrective actions are logged manually without deterministic verification that machine parameters were restored to nominal baselines.
-- **Lack of Traceability**: Historical quality records rarely link individual physical product SKU photos directly to specific machine stations, operator shifts, and environmental readings.
+- **Lack of End-to-End Traceability**: Historical quality records rarely link individual physical product SKU photos directly to specific machine stations, operator shifts, and environmental readings.
 
 ---
 
-## 3. Our Solution
+## 3. Solution
 
-ZERO-DEFECT X addresses these challenges through a 4-phase closed-loop intelligence architecture:
+ZERO-DEFECT X addresses these challenges through a 4-phase closed-loop architecture:
 
-1. **Detect**: Real product photo capture (via mobile phone camera or desktop SCADA upload) analyzed using an OpenCV Computer Vision anomaly detection engine.
-2. **Diagnose**: Automatic correlation of visual defect features (e.g., surface scratches) with live industrial machine telemetry (e.g., elevated vibration on Machine Station M03).
+1. **Detect**: Real product photo capture (via mobile phone camera or desktop SCADA upload) analyzed using an OpenCV computer vision engine generating an **explainable anomaly score**.
+2. **Diagnose**: Automatic correlation of visual defect features (e.g., surface scratches) with industrial machine telemetry (e.g., elevated vibration on Machine Station M03).
 3. **Correct**: Guided corrective maintenance dispatch, logging before-and-after machine parameter snapshots.
 4. **Verify**: Reinspection of post-maintenance physical samples to deterministically confirm quality recovery (`VERIFIED` vs `REQUIRES FURTHER INVESTIGATION`).
 
@@ -40,53 +39,54 @@ ZERO-DEFECT X addresses these challenges through a 4-phase closed-loop intellige
 
 ## 4. Key Features
 
-- **Real Product Photo Capture**: Mobile QR code entry (`/mobile-inspection`) allowing physical camera capture of metal ring components on the shop floor.
-- **OpenCV Vision Engine**: Adaptive thresholding, contour extraction, bounding box localization, and normalized **Anomaly Scoring** for real product samples.
-- **Dual-Laptop Virtual Factory Integration**: Real-time polling client connecting Laptop 1 (SCADA Backend) to Laptop 2 (`10.10.56.118:8000`) Virtual Factory Telemetry API.
-- **Live Connection Indicator**: Dynamic SCADA dashboard badge showing `LAPTOP 2 VIRTUAL FACTORY: CONNECTED` when online and `DISCONNECTED / VIRTUAL FACTORY OFFLINE` when unreachable (no faked frontend metrics).
-- **Evidence-Based Root Cause Correlation**: Non-causal statistical correlation model outputting *Probable Contributing Factors* supported by historical evidence scores.
-- **Risk Monitor & Heatmap**: Multi-signal risk assessment engine categorizing machine risk levels (`CRITICAL`, `HIGH`, `MODERATE`, `LOW`).
-- **Closed-Loop Reinspection**: Before/After condition comparison matrix validating that maintenance reduced machine vibration to nominal thresholds (`2.7 mm/s`).
+- **Real Product Photo Capture** `[IMPLEMENTED]`: Mobile QR code entry (`/mobile-inspection`) allowing physical camera capture of metal ring components on the shop floor.
+- **OpenCV Computer Vision Engine** `[IMPLEMENTED]`: Adaptive thresholding, contour extraction, bounding box localization, and normalized **explainable anomaly score** for real product samples.
+- **Dual-Laptop Virtual Factory Integration** `[DEMO / SIMULATION]`: Real-time polling client connecting Laptop 1 (SCADA Backend) to Laptop 2 Virtual Factory Telemetry API.
+- **Live Connection Indicator** `[IMPLEMENTED]`: Dynamic SCADA dashboard badge showing `LAPTOP 2 VIRTUAL FACTORY: CONNECTED` when online and `DISCONNECTED / VIRTUAL FACTORY OFFLINE` when unreachable (no faked frontend metrics).
+- **Evidence-Based Root Cause Correlation** `[IMPLEMENTED]`: Non-causal statistical correlation model outputting *Probable Contributing Factors* supported by historical evidence scores.
+- **Risk Monitor & Heatmap** `[IMPLEMENTED]`: Multi-signal risk assessment engine categorizing machine risk levels (`CRITICAL`, `HIGH`, `MODERATE`, `LOW`).
+- **Closed-Loop Reinspection** `[IMPLEMENTED]`: Before/After condition comparison matrix validating that maintenance reduced machine vibration to nominal thresholds (`2.7 mm/s`).
+- **Deep Learning Inference** `[FUTURE SCOPE]`: Extension stub prepared for future custom YOLOv8 object detection model weights.
 
 ---
 
 ## 5. Complete Workflow
 
 ```
-[ Physical Product Image ]
-            │
-            ▼
+[ Product Image ]
+        │
+        ▼
 [ Vision Inspection (OpenCV Anomaly Detector) ]
-            │
-            ├─► Defect Detection (PASSED / DEFECTIVE)
-            ├─► Classification (Scratch, Surface Anomaly)
-            ├─► Localization (Bounding Box Normalization)
-            └─► Anomaly Score (88.5%)
-            │
-            ▼
+        │
+        ├─► Defect Detection (PASSED / DEFECTIVE)
+        ├─► Classification (Scratch, Surface Defect)
+        ├─► Localization (Bounding Box Normalization)
+        └─► Severity Estimation & Explainable Anomaly Score
+        │
+        ▼
 [ Production Context Linkage (Laptop 2 SIMULATED FACTORY DATA) ]
-            │
-            ▼
+        │
+        ▼
 [ Historical Analysis & Evidence Matching ]
-            │
-            ▼
+        │
+        ▼
 [ Probable Contributing Factor Analysis ]
  (e.g., "Elevated Machine Vibration on M03" — Requires Verification)
-            │
-            ▼
-[ Recommended Maintenance Action Dispatch ]
-            │
-            ▼
+        │
+        ▼
+[ Recommended Maintenance Action ]
+        │
+        ▼
 [ Corrective Action Execution (M03 Vibration: 4.8 mm/s ──► 2.7 mm/s) ]
-            │
-            ▼
-[ Physical Reinspection Sample Processing ]
-            │
-            ▼
-[ Deterministic Verification Engine (VERIFIED / REQUIRES FURTHER INVESTIGATION) ]
-            │
-            ▼
-[ Closed-Loop Production Feedback & KPI Update ]
+        │
+        ▼
+[ Reinspection Sample Processing ]
+        │
+        ▼
+[ Verification Engine (VERIFIED / REQUIRES FURTHER INVESTIGATION) ]
+        │
+        ▼
+[ Production Feedback Loop & KPI Update ]
 ```
 
 ---
@@ -95,7 +95,7 @@ ZERO-DEFECT X addresses these challenges through a 4-phase closed-loop intellige
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           LAPTOP 2: VIRTUAL FACTORY                             │
+│                      LAPTOP 2: VIRTUAL FACTORY (SIMULATION)                     │
 │                  FastAPI Telemetry Node (0.0.0.0:8000)                          │
 │         Emits 14 Fields Labeled: "SIMULATED FACTORY DATA"                      │
 └────────────────────────────────────────┬────────────────────────────────────────┘
@@ -131,20 +131,20 @@ ZERO-DEFECT X addresses these challenges through a 4-phase closed-loop intellige
 
 ## 7. Technical Stack
 
-| Layer | Component | Technologies | Implementation Details |
-| :--- | :--- | :--- | :--- |
-| **Frontend** | SCADA UI Dashboard | React 18, TypeScript, Vite, Vanilla SCADA CSS, Lucide Icons | Responsive dark SCADA design, dynamic connection badge, mobile QR workflow |
-| **Backend** | Intelligence Server | Python 3.10+, FastAPI, Uvicorn, Pydantic v2 | Port 8001, CORS middleware, REST endpoints, telemetry poller |
-| **Vision** | Anomaly Detection | OpenCV (`opencv-python-headless`), NumPy | Adaptive thresholding, contour detection, bounding box normalization |
-| **Database** | Traceability Store | SQLAlchemy ORM, SQLite (`zerodefect.db`), PostgreSQL schema | Relational models for Inspections, Defects, MachineParameters, Actions, Reinspections |
-| **Simulator** | Virtual Factory | Python FastAPI (Port 8000) | 14-field industrial telemetry generator, fault injection & reset endpoints |
-| **Deployment** | Cloud Hosting | Render (Backend), Netlify (Frontend), GitHub | Automated CI/CD build scripts, environment variable resolution |
+| Layer | Component | Technologies | Implementation Status |
+| :--- | :--- | :--- | :---: |
+| **Frontend** | SCADA UI Dashboard | React 18, TypeScript, Vite, SCADA SCSS/CSS, Lucide Icons | **IMPLEMENTED** |
+| **Backend** | Intelligence Server | Python 3.10+, FastAPI, Uvicorn, Pydantic v2 | **IMPLEMENTED** |
+| **Vision** | Anomaly Detection | OpenCV (`opencv-python-headless`), NumPy | **IMPLEMENTED** |
+| **Database** | Traceability Store | SQLAlchemy ORM, SQLite (`zerodefect.db`), PostgreSQL schema | **IMPLEMENTED** |
+| **Simulator** | Virtual Factory | Python FastAPI (Port 8000) | **DEMO / SIMULATION** |
+| **Deep Learning** | Object Detection | YOLOv8 ONNX / PyTorch Integration Stub | **FUTURE SCOPE** |
 
 ---
 
 ## 8. Core Implementation
 
-The core backend and vision processing pipeline is structured across clean modular packages:
+The backend and vision processing pipeline is structured across clean modular packages:
 
 - `backend/app/main.py`: Main FastAPI application entry point, CORS configuration, and route registration.
 - `backend/app/routers/api_router.py`: REST API routes for vision analysis, live Laptop 2 telemetry polling proxy (`get_live_factory_telemetry`), root-cause queries, risk assessment, corrective actions, and reinspections.
@@ -157,16 +157,19 @@ The core backend and vision processing pipeline is structured across clean modul
 
 ## 9. SI-03 Requirement Alignment
 
-| SI-03 Problem Requirement | Implemented Feature in ZERO-DEFECT X | Implementation Status |
+| SI-03 Requirement | Implemented Feature in ZERO-DEFECT X | Implementation Status |
 | :--- | :--- | :---: |
-| **Visual Surface Defect Detection** | OpenCV Anomaly Detector calculating Anomaly Score and bounding box localization | **IMPLEMENTED** |
-| **Shop Floor Image Capture** | Mobile QR Code generator + Mobile Web UI (`/mobile-inspection`) for camera photo capture | **IMPLEMENTED** |
-| **Machine Telemetry Linkage** | Automatic linkage of real metal ring photos to Laptop 2 industrial telemetry metrics | **IMPLEMENTED** |
-| **Root Cause Analysis** | Statistical correlation engine generating *Probable Contributing Factors* backed by historical evidence | **IMPLEMENTED** |
-| **Preventive Action Tracking** | Corrective maintenance action lifecycle management (`PENDING` ──► `VERIFIED`) | **IMPLEMENTED** |
-| **Closed-Loop Reinspection** | Reinspection sample evaluation with deterministic before/after comparison matrix | **IMPLEMENTED** |
-| **Industrial Telemetry Simulation** | Laptop 2 Virtual Factory Simulator exporting 14 readings labeled `"SIMULATED FACTORY DATA"` | **DEMO / SIMULATION** |
-| **Deep Learning YOLOv8 Model** | Extension stub ready for custom model weights integration (`vision/services/demo_provider.py`) | **FUTURE / EXTENSION** |
+| **Defect Detection** | OpenCV Anomaly Detector calculating Anomaly Score (`app/vision/opencv_provider.py`) | **IMPLEMENTED** |
+| **Classification** | Multi-class defect categorization (Scratch, Surface Defect, Normal Component) | **IMPLEMENTED** |
+| **Localization** | Bounding box normalization (`norm_x_min`, `norm_y_min`, `norm_x_max`, `norm_y_max`) | **IMPLEMENTED** |
+| **Severity Estimation** | Rule-based severity rating (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`) based on contour metrics | **IMPLEMENTED** |
+| **Machine Parameters** | Telemetry ingestion: temperature (°C), vibration (mm/s), pressure (bar), spindle RPM | **DEMO / SIMULATION** |
+| **Batch Information** | Active production batch tracking (`batch_id`, e.g., `B1042`) | **IMPLEMENTED** |
+| **Operator Shift** | Shift metadata association (`shift_id`, e.g., `Shift B`) | **IMPLEMENTED** |
+| **Environmental Conditions** | Shop floor environmental monitoring: ambient temperature (°C) and humidity (%) | **DEMO / SIMULATION** |
+| **Product Images** | Real product image upload and mobile camera capture (`/mobile-inspection`) | **IMPLEMENTED** |
+| **Probable-Cause Analysis** | Statistical correlation engine generating non-causal *Probable Contributing Factors* | **IMPLEMENTED** |
+| **Feedback to Production** | Corrective maintenance action logging and closed-loop reinspection verification | **IMPLEMENTED** |
 
 ---
 
@@ -184,11 +187,13 @@ The core backend and vision processing pipeline is structured across clean modul
 
 ---
 
-## 11. Development History (Based on Actual Git Commits)
+## 11. Development History
+
+The project evolution is recorded in the repository Git commit history:
 
 - **Commit `acda748`**: `Configure production backend API URL https://zero-defect-x-backend.onrender.com and fix build types`
-  - Added production API resolution fallback in `apiClient.ts` and `.env.production`.
-  - Fixed strict TypeScript build types and verified clean `npm run build` bundle output.
+  - Configured production API URL resolution fallback in `apiClient.ts` and `.env.production`.
+  - Resolved strict TypeScript compilation types and verified clean `npm run build` bundle output.
 - **Commit `7400924`**: `Add opencv-python-headless to backend requirements.txt for Render cloud deployment`
   - Added headless OpenCV dependency for GUI-less cloud server deployment on Render.
   - Verified backend package imports (`from app.vision.opencv_provider import OpenCVVisionProvider`).
@@ -200,8 +205,8 @@ The core backend and vision processing pipeline is structured across clean modul
 ## 12. Screenshots / Working Prototype
 
 > [!NOTE]
-> The screenshots below illustrate the actual working user interface of the ZERO-DEFECT X system.
-> *To view rendered screenshot previews in the repository, add real PNG/JPG image files into the `docs/assets/` folder.*
+> The image placeholders below represent the actual user interface of the ZERO-DEFECT X system.
+> *To view rendered screenshot previews in the repository, place PNG/JPG image files into the `docs/assets/` directory.*
 
 1. **SCADA Command Center Dashboard**:
    `![SCADA Command Center](docs/assets/command_center.png)`
@@ -247,19 +252,19 @@ git clone https://github.com/rithiks395-cmd/ZERO-DEFECT-X.git
 cd ZERO-DEFECT-X
 ```
 
-### Step 2: Start Virtual Factory Simulator (Laptop 2 / Local Port 8000)
+### Step 2: Start Virtual Factory Simulator (Local Port 8000)
 ```bash
 python -m uvicorn simulator.virtual_factory_server:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Step 3: Start Backend Server (Laptop 1 / Local Port 8001)
+### Step 3: Start Backend Server (Local Port 8001)
 ```bash
 cd backend
 python -m pip install -r requirements.txt
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
-### Step 4: Start Frontend Development Server (Laptop 1 / Local Port 5173)
+### Step 4: Start Frontend Development Server (Local Port 5173)
 ```bash
 cd ../frontend
 npm install
@@ -294,9 +299,14 @@ VITE_API_URL=https://zero-defect-x-backend.onrender.com/api
 
 ---
 
-## 16. Virtual Factory / Simulation
+## 16. Virtual Factory / Simulation & Local Demonstration
 
-The industrial process line telemetry used in ZERO-DEFECT X is generated by the network-accessible Virtual Factory server (`simulator/virtual_factory_server.py`).
+The industrial process line telemetry used in ZERO-DEFECT X is generated by a network-accessible Virtual Factory server (`simulator/virtual_factory_server.py`).
+
+### Local Network Demonstration Setup:
+- **Laptop 1 (SCADA & Backend)**: IP `10.10.56.134` (FastAPI on Port `8001`, React on Port `5173`)
+- **Laptop 2 (Virtual Factory Node)**: IP `10.10.56.118` (Telemetry API on Port `8000`)
+- **Laptop 2 Telemetry Endpoint**: `http://10.10.56.118:8000/api/telemetry`
 
 ### Emitted Telemetry Metrics:
 - `product_id`: Active product SKU (`RING-001`)
@@ -321,16 +331,17 @@ The industrial process line telemetry used in ZERO-DEFECT X is generated by the 
 
 ## 17. Vision / AI Transparency
 
-- **Current Active Vision Engine**: OpenCV (`cv2`) image processing module (`app/vision/opencv_provider.py`).
-- **Vision Metric Output**: The confidence score produced by the OpenCV detector represents a mathematical **Anomaly Score** based on thresholded contour area, perimeter ratio, and pixel intensity variance.
-- **Deep Learning Model Extension**: Deep learning models (e.g. YOLOv8) are included as extension stubs (`vision/services/demo_provider.py`) for future custom model weight training. In the current release, primary inspection is executed by the OpenCV engine.
+- **Current Active Vision Implementation**: Classical computer vision powered by OpenCV (`opencv-python-headless`) in `app/vision/opencv_provider.py`.
+- **Methodology**: Grayscale conversion, Gaussian blurring, adaptive thresholding, contour extraction, bounding box normalization, and deterministic calculation of an **explainable anomaly score**.
+- **Nature of Algorithm**: OpenCV processing is an algorithmic image analysis technique, not a deep-learning neural network or black-box AI model.
+- **Deep Learning Model Extension**: Extension stubs (`vision/services/demo_provider.py` & `app/vision/yolo_provider.py`) are prepared for future YOLOv8 ONNX/PyTorch model weight integration `[FUTURE SCOPE]`.
 
 ---
 
 ## 18. Data Integrity and Explainability
 
 ZERO-DEFECT X adheres strictly to industrial explainability standards:
-- **Non-Causal Language**: The root cause correlation engine never claims definite physical causation. It identifies **Probable Contributing Factors**, **Observed Associations**, and **Supporting Evidence**.
+- **Non-Causal Terminology**: The root cause correlation engine never claims definite physical causation. It identifies **Probable Contributing Factors**, **Observed Associations**, and **Supporting Evidence**.
 - **Verification Requirement**: All probable factors are flagged with `REQUIRES VERIFICATION: YES` until an authorized operator performs maintenance and submits a reinspection sample.
 - **Honest Connection Dynamics**: If Laptop 2 is offline or unreachable, the SCADA card updates dynamically to `DISCONNECTED / VIRTUAL FACTORY OFFLINE`. Telemetry values are never silently fabricated when the network connection is lost.
 
@@ -338,9 +349,9 @@ ZERO-DEFECT X adheres strictly to industrial explainability standards:
 
 ## 19. Future Scope
 
-1. **Edge AI Deployment**: Exporting trained YOLOv8 ONNX models to edge hardware (e.g., NVIDIA Jetson Orin Nano) for sub-10ms inference.
-2. **OPC UA / Modbus Protocol Integration**: Replacing HTTP simulation endpoints with direct OPC UA / MQTT industrial PLC connectivity.
-3. **Automated Closed-Loop PLC Control**: Direct feedback loops issuing automated speed reduction signals to PLC drive controllers upon detecting critical vibration anomalies.
+1. **Deep Learning Object Detection** `[FUTURE SCOPE]`: Integrating custom-trained YOLOv8 ONNX model weights for multi-class industrial defect segmentation.
+2. **OPC UA / Modbus Protocol Integration** `[FUTURE SCOPE]`: Replacing HTTP simulation endpoints with direct OPC UA / MQTT industrial PLC connectivity.
+3. **Automated Closed-Loop PLC Control** `[FUTURE SCOPE]`: Direct feedback loops issuing automated speed reduction signals to PLC drive controllers upon detecting critical vibration anomalies.
 
 ---
 
