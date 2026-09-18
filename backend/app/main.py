@@ -9,6 +9,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 
+
+def get_cors_origins():
+    raw = os.environ.get("CORS_ORIGINS", "*")
+    if raw.strip() == "*":
+        return ["*"]
+    return [origin.strip() for origin in raw.split(",") if origin.strip()]
+
 from app.database import Base, engine
 from app.seed import init_and_seed
 from app.routers.api_router import router as api_router
@@ -38,8 +45,8 @@ app = FastAPI(
 # CORS configuration for cross-device & frontend communication
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=get_cors_origins(),
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
