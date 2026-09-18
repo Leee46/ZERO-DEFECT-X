@@ -24,7 +24,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -98,7 +98,7 @@ def get_factory_status():
         "process_flow": FACTORY_STATE["process_flow"],
         "machines": FACTORY_STATE["machines"],
         "environment": FACTORY_STATE["environment"],
-        "timestamp": datetime.datetime.utcnow().isoformat()
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
     }
 
 
