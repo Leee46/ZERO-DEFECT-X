@@ -2,7 +2,7 @@
 
 > **Detect. Diagnose. Correct. Verify.**
 
-[![GitHub Repo](https://img.shields.io/badge/GitHub-ZERO--DEFECT--X-181717?style=for-the-badge&logo=github)](https://github.com/rithiks395-cmd/ZERO-DEFECT-X)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-ZERO--DEFECT--X-181717?style=for-the-badge&logo=github)](https://github.com/Leee46/ZERO-DEFECT-X)
 [![Frontend Live](https://img.shields.io/badge/Frontend-Netlify-00C7B7?style=for-the-badge&logo=netlify)](https://zero-defect-x.netlify.app/)
 [![Backend Live](https://img.shields.io/badge/Backend-Render-46E3B7?style=for-the-badge&logo=render)](https://zero-defect-x-backend.onrender.com)
 [![Status](https://img.shields.io/badge/Status-Implemented_%26_Deployed-22A06B?style=for-the-badge)]()
@@ -77,7 +77,7 @@ ZERO-DEFECT X addresses these challenges through a 4-phase closed-loop architect
 [ Recommended Maintenance Action ]
         │
         ▼
-[ Corrective Action Execution (M03 Vibration: 4.8 mm/s ──► 2.7 mm/s) ]
+[ Corrective Action Execution (M03 Vibration: elevated ──► simulator-confirmed post-maintenance reading) ]
         │
         ▼
 [ Reinspection Sample Processing ]
@@ -232,11 +232,11 @@ The project evolution is recorded in the repository Git commit history:
 
 ## 13. Live Demo Links
 
-- **GitHub Repository**: [https://github.com/rithiks395-cmd/ZERO-DEFECT-X](https://github.com/rithiks395-cmd/ZERO-DEFECT-X)
-- **Live React Frontend**: [https://zero-defect-x.netlify.app/](https://zero-defect-x.netlify.app/)
-- **Live FastAPI Backend**: [https://zero-defect-x-backend.onrender.com](https://zero-defect-x-backend.onrender.com)
-- **Backend API Health Check**: [https://zero-defect-x-backend.onrender.com/api/health](https://zero-defect-x-backend.onrender.com/api/health)
-- **Backend OpenAPI Docs**: [https://zero-defect-x-backend.onrender.com/docs](https://zero-defect-x-backend.onrender.com/docs)
+- **GitHub Repository**: [https://github.com/Leee46/ZERO-DEFECT-X](https://github.com/Leee46/ZERO-DEFECT-X)
+- **React Frontend**: Deployment URL is environment-specific; run locally or configure your own hosting URL.
+- **FastAPI Backend**: Deployment URL is environment-specific; run locally or configure your own hosting URL.
+- **Backend API Health Check**: `/api/health` on your configured backend host.
+- **Backend OpenAPI Docs**: `/docs` on your configured backend host.
 
 ---
 
@@ -248,7 +248,7 @@ The project evolution is recorded in the repository Git commit history:
 
 ### Step 1: Clone Repository
 ```bash
-git clone https://github.com/rithiks395-cmd/ZERO-DEFECT-X.git
+git clone https://github.com/Leee46/ZERO-DEFECT-X.git
 cd ZERO-DEFECT-X
 ```
 
@@ -257,7 +257,7 @@ cd ZERO-DEFECT-X
 python -m uvicorn simulator.virtual_factory_server:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Step 3: Start Backend Server (Local Port 8001)
+### Step 3: Start Backend Server (Local Port 8000)
 ```bash
 cd backend
 python -m pip install -r requirements.txt
@@ -278,17 +278,17 @@ npm run dev -- --host 0.0.0.0
 ### Backend Environment (`backend/.env`)
 ```ini
 # Server Execution Port & Host
-PORT=8001
+PORT=8000
 HOST=0.0.0.0
 
 # Laptop 2 Telemetry Endpoint
-LAPTOP2_URL=http://10.10.56.118:8000/api/telemetry
+LAPTOP2_URL=http://127.0.0.1:8000
 
 # Database URL (SQLite default for zero-config execution, or PostgreSQL)
 DATABASE_URL=sqlite:///./zerodefect.db
 
 # CORS Configuration
-CORS_ORIGINS=*
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 ```
 
 ### Frontend Environment (`frontend/.env.production`)
@@ -357,8 +357,8 @@ ZERO-DEFECT X adheres strictly to industrial explainability standards:
 
 ## 20. Project Status
 
-- **Core Functionality**: **100% IMPLEMENTED & VERIFIED**
-- **Automated Test Suite**: **PASSED (Phase 4, Phase 5, Phase 6 Suites 100% Passed)**
+- **Core Functionality**: **IMPLEMENTED**
+- **Automated Test Suite**: Test status should be reported from the current CI/local verification run.
 - **Cloud Deployments**: **LIVE**
   - Frontend: [https://zero-defect-x.netlify.app/](https://zero-defect-x.netlify.app/)
   - Backend: [https://zero-defect-x-backend.onrender.com](https://zero-defect-x-backend.onrender.com)
