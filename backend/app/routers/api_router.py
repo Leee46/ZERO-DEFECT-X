@@ -286,10 +286,47 @@ def get_dashboard(db: Session = Depends(get_db)):
     total_inspected = db.query(Inspection).count()
     defective_units = db.query(Inspection).filter(Inspection.status == "DEFECTIVE").count()
     defect_rate = round((defective_units / total_inspected * 100), 2) if total_inspected > 0 else 0.0
-
-    high_risk_machine = "M03"
-    current_system_risk = "HIGH" if defective_units > 0 else "LOW"
     active_alerts_count = db.query(Alert).filter(Alert.status == "ACTIVE").count()
+
+    machine_rows = []
+    for machine in db.query(Machine).all():
+        inspected = db.query(Inspection).filter(Inspection.machine_id == machine.id).count()
+        defective = db.query(Inspection).filter(
+            Inspection.machine_id == machine.id,
+            Inspection.status == "DEFECTIVE"
+        ).count()
+        machine_risk = risk_engine.calculate_machine_risk(db, machine.id)
+        machine_rows.append({
+            "machine": machine.id,
+            "rate": round((defective / inspected) * 100, 2) if inspected else 0.0,
+            "inspected": inspected,
+            "risk_score": machine_risk["risk_score"],
+            "risk_level": machine_risk["risk_level"],
+        })
+
+    machine_rows.sort(
+        key=lambda row: (row["risk_score"], row["rate"], row["inspected"]),
+        reverse=True
+    )
+    high_risk_machine = machine_rows[0]["machine"] if machine_rows else "N/A"
+    highest_risk_level = machine_rows[0]["risk_level"] if machine_rows else "LOW"
+    current_system_risk = highest_risk_level
+
+    defect_rows = (
+        db.query(Defect.defect_type, Defect.severity)
+        .order_by(Defect.defect_type.asc())
+        .all()
+    )
+    distribution = {}
+    severity_by_type = {}
+    for defect_type, severity in defect_rows:
+        distribution[defect_type] = distribution.get(defect_type, 0) + 1
+        severity_by_type.setdefault(defect_type, severity)
+
+    defect_distribution = [
+        {"name": name, "value": count, "severity": severity_by_type.get(name, "Unknown")}
+        for name, count in sorted(distribution.items(), key=lambda item: (-item[1], item[0]))
+    ]
 
     recent_insps = db.query(Inspection).order_by(Inspection.inspection_time.desc()).limit(5).all()
     recent_inspections_list = []
@@ -303,23 +340,8 @@ def get_dashboard(db: Session = Depends(get_db)):
             "shift": insp.shift_id,
             "status": insp.status,
             "defectType": defect_type,
-            "timestamp": insp.inspection_time.strftime("%Y-%m-%d %H:%M:%S") if insp.inspection_time else ""
+            "timestamp": insp.inspection_time.isoformat() if insp.inspection_time else ""
         })
-
-    defect_distribution = [
-        {"name": "Scratch", "value": 14, "severity": "High"},
-        {"name": "Crack", "value": 8, "severity": "Critical"},
-        {"name": "Dent", "value": 6, "severity": "Medium"},
-        {"name": "Surface Defect", "value": 5, "severity": "Low"},
-        {"name": "Missing Feature", "value": 4, "severity": "Medium"},
-    ]
-
-    machine_defect_rates = [
-        {"machine": "M01", "rate": 0.95, "inspected": 420},
-        {"machine": "M02", "rate": 1.58, "inspected": 380},
-        {"machine": "M03", "rate": 8.71, "inspected": 310},
-        {"machine": "M04", "rate": 0.45, "inspected": 138},
-    ]
 
     return {
         "total_inspected": total_inspected,
@@ -330,7 +352,14 @@ def get_dashboard(db: Session = Depends(get_db)):
         "active_alerts_count": active_alerts_count,
         "recent_inspections": recent_inspections_list,
         "defect_distribution": defect_distribution,
-        "machine_defect_rates": machine_defect_rates
+        "machine_defect_rates": [
+            {
+                "machine": row["machine"],
+                "rate": row["rate"],
+                "inspected": row["inspected"]
+            }
+            for row in machine_rows
+        ]
     }
 
 
