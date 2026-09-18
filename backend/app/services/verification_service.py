@@ -93,21 +93,18 @@ class VerificationService:
         # Evaluate verification deterministically
         verif_eval = self.evaluate_verification(db, status, ca, machine_id)
 
-        # Build BEFORE condition
-        before_vibe = 4.8
-        before_temp = 72.0
-        before_risk = "HIGH"
-        if ca and ca.before_snapshot:
-            before_vibe = ca.before_snapshot.get("vibration", 4.8)
-            before_temp = ca.before_snapshot.get("temperature", 72.0)
-            before_risk = ca.before_snapshot.get("risk_level", "HIGH")
+        # Build BEFORE condition from the captured action snapshot.
+        before_snapshot = ca.before_snapshot if ca and ca.before_snapshot else {}
+        before_vibe = before_snapshot.get("vibration")
+        before_temp = before_snapshot.get("temperature")
+        before_risk = before_snapshot.get("risk_level", "UNKNOWN")
 
         orig_defect = orig_insp.defects[0].defect_type if orig_insp and orig_insp.defects else "Scratch"
         orig_severity = orig_insp.defects[0].severity if orig_insp and orig_insp.defects else "Medium"
 
         before_cond = {
-            "vibration": f"{before_vibe} mm/s",
-            "temperature": f"{before_temp}°C",
+            "vibration": f"{before_vibe} mm/s" if before_vibe is not None else "N/A",
+            "temperature": f"{before_temp}°C" if before_temp is not None else "N/A",
             "risk": before_risk,
             "defect": orig_defect,
             "severity": orig_severity,
@@ -122,8 +119,8 @@ class VerificationService:
         risk_res = risk_engine.calculate_machine_risk(db, machine_id)
 
         after_cond = {
-            "vibration": f"{latest_param.vibration if latest_param else 2.7} mm/s",
-            "temperature": f"{latest_param.temperature if latest_param else 68.0}°C",
+            "vibration": f"{latest_param.vibration} mm/s" if latest_param else "N/A",
+            "temperature": f"{latest_param.temperature}°C" if latest_param else "N/A",
             "risk": risk_res.get("risk_level", "NORMAL"),
             "defect": defects[0].get("defect_type", "None") if defects else "None",
             "severity": defects[0].get("severity", "None") if defects else "None",
