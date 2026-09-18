@@ -22,7 +22,9 @@ class ProbableCauseEngine:
     def analyze(self, db: Session, inspection_id: str, machine_id: str = None) -> Dict[str, Any]:
         # 1. Fetch Inspection & Production Context
         insp = db.query(Inspection).filter(Inspection.id == inspection_id).first()
-        target_machine_id = machine_id or (insp.machine_id if insp else "M03")
+        if not insp:
+            raise ValueError(f"Inspection {inspection_id} not found")
+        target_machine_id = machine_id or insp.machine_id
 
         machine = db.query(Machine).filter(Machine.id == target_machine_id).first()
         latest_param = db.query(MachineParameter).filter(
@@ -57,7 +59,7 @@ class ProbableCauseEngine:
         }
 
         # Normal component check
-        if insp and insp.status == "PASSED":
+        if insp.status == "PASSED":
             return {
                 "inspection_id": inspection_id,
                 "machine_id": target_machine_id,
@@ -103,8 +105,8 @@ class ProbableCauseEngine:
                 "current_condition": f"Vibration {vib} mm/s | Temp {temp}°C",
                 "production_context": production_context,
                 "historical_comparison": {
-                    "normal_vibration_defect_rate": 0.0,
-                    "elevated_vibration_defect_rate": 0.0,
+                    "normal_vibration_defect_rate": None,
+                    "elevated_vibration_defect_rate": None,
                     "matching_historical_count": len(total_machine_inspections)
                 },
                 "confidence": 0.30,
@@ -169,12 +171,12 @@ class ProbableCauseEngine:
         # Fallback if no specific parameter deviation was found
         if not candidate_factors:
             candidate_factors.append({
-                "factor": f"Mechanical Surface Contact Deviation on {target_machine_id}",
+                "factor": "No strong contributing factor identified",
                 "evidence_level": "LOW",
-                "score": 0.45,
-                "details": "Parameters remain within normal bounds; defect likely caused by transient mechanical contact or tool wear."
+                "score": 0.20,
+                "details": "Available machine and production records do not show a specific parameter deviation correlated with this defect."
             })
-            evidence_points.append("Parameters remain within normal statistical tolerance boundaries; transient tooling variance indicated.")
+            evidence_points.append("No specific machine-parameter deviation was identified in the available evidence.")
 
         # Primary Probable Factor (highest scored candidate)
         candidate_factors.sort(key=lambda c: c.get("score", 0.0), reverse=True)
