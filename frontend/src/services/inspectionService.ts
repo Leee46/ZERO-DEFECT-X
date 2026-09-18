@@ -14,41 +14,41 @@ class InspectionService {
       const data = await apiClient.get<any[]>('/inspections');
       if (Array.isArray(data) && data.length > 0) {
         const remoteInspections: Inspection[] = data.map((item) => {
-          const rawUrl = item.image_path || item.imageUrl || '/images/sample.jpg';
+          const rawUrl = item.image_path || item.imageUrl || '';
           const defects = (item.defects || []).map((d: any, idx: number) => ({
             id: d.id || `DEF-${idx}`,
             type: d.defect_type || d.type || 'Surface Anomaly',
-            confidence: Math.round((d.confidence || 0.88) * (d.confidence > 1 ? 1 : 100)),
-            severity: d.severity || 'HIGH',
-            location: d.location || 'Center surface',
+            confidence: Math.round((d.confidence ?? 0) * ((d.confidence ?? 0) > 1 ? 1 : 100)),
+            severity: d.severity || 'LOW',
+            location: d.location || 'Not localized',
             boundingBox: {
-              x: d.x_min ? Math.round(d.x_min * 800) : 420,
-              y: d.y_min ? Math.round(d.y_min * 600) : 80,
-              width: d.x_max ? Math.round((d.x_max - d.x_min) * 800) : 190,
-              height: d.y_max ? Math.round((d.y_max - d.y_min) * 600) : 130,
-              label: d.defect_type || 'Surface Anomaly'
+              x: d.x_min != null ? Math.round(d.x_min * 800) : 0,
+              y: d.y_min != null ? Math.round(d.y_min * 600) : 0,
+              width: d.x_max != null && d.x_min != null ? Math.round((d.x_max - d.x_min) * 800) : 0,
+              height: d.y_max != null && d.y_min != null ? Math.round((d.y_max - d.y_min) * 600) : 0,
+              label: d.defect_type || 'Unclassified'
             },
-            description: d.description || 'Surface structural anomaly'
+            description: d.description || 'No additional description provided'
           }));
 
           return {
             id: item.id,
-            productId: item.product_id || item.productId || 'P1042-087',
-            batchId: item.batch_id || item.batchId || 'B1042',
-            machineId: item.machine_id || item.machineId || 'M03',
-            shift: item.shift_id || item.shift || 'Shift B',
-            timestamp: item.inspection_time ? item.inspection_time.replace('T', ' ').substring(0, 19) : (item.timestamp || '2026-09-18 10:00:00'),
+            productId: item.product_id || item.productId || 'Unknown',
+            batchId: item.batch_id || item.batchId || 'Unknown',
+            machineId: item.machine_id || item.machineId || 'Unknown',
+            shift: item.shift_id || item.shift || 'Unknown',
+            timestamp: item.inspection_time ? item.inspection_time.replace('T', ' ').substring(0, 19) : (item.timestamp || 'Unknown'),
             status: item.status === 'DEFECTIVE' ? 'DEFECTIVE' : 'PASS',
             defects: defects,
             imageUrl: rawUrl,
             imageThumbnail: rawUrl,
             parameters: {
-              temperature: 72.0,
-              vibration: 4.8,
-              pressure: 6.2,
-              speed: 1480,
-              envTemp: 29.0,
-              envHumidity: 68
+              temperature: item.temperature ?? null,
+              vibration: item.vibration ?? null,
+              pressure: item.pressure ?? null,
+              speed: item.speed ?? null,
+              envTemp: item.environment_temperature ?? null,
+              envHumidity: item.humidity ?? null
             },
             isControlledDemo: false
           };
