@@ -375,6 +375,11 @@ def get_machines(db: Session = Depends(get_db)):
 
         risk_res = risk_engine.calculate_machine_risk(db, m.id)
         
+        inspected = db.query(Inspection).filter(Inspection.machine_id == m.id).count()
+        defective = db.query(Inspection).filter(
+            Inspection.machine_id == m.id,
+            Inspection.status == "DEFECTIVE"
+        ).count()
         result.append(MachineOut(
             id=m.id,
             machine_code=m.machine_code,
@@ -382,11 +387,11 @@ def get_machines(db: Session = Depends(get_db)):
             machine_type=m.machine_type,
             location=m.location,
             status=m.status,
-            temperature=param.temperature if param else 65.0,
-            vibration=param.vibration if param else 2.0,
-            pressure=param.pressure if param else 6.0,
-            speed=param.speed if param else 1500,
-            defect_rate=8.71 if m.id == "M03" else (1.58 if m.id == "M02" else 0.95),
+            temperature=param.temperature if param else None,
+            vibration=param.vibration if param else None,
+            pressure=param.pressure if param else None,
+            speed=param.speed if param else None,
+            defect_rate=round(defective / inspected * 100, 2) if inspected else 0.0,
             risk_score=risk_res["risk_score"],
             created_at=m.created_at
         ))
@@ -412,11 +417,17 @@ def get_machine(machine_id: str, db: Session = Depends(get_db)):
         machine_type=m.machine_type,
         location=m.location,
         status=m.status,
-        temperature=param.temperature if param else 65.0,
-        vibration=param.vibration if param else 2.0,
-        pressure=param.pressure if param else 6.0,
-        speed=param.speed if param else 1500,
-        defect_rate=8.71 if m.id == "M03" else 0.95,
+        temperature=param.temperature if param else None,
+        vibration=param.vibration if param else None,
+        pressure=param.pressure if param else None,
+        speed=param.speed if param else None,
+        defect_rate=round(
+            db.query(Inspection).filter(
+                Inspection.machine_id == m.id,
+                Inspection.status == "DEFECTIVE"
+            ).count()
+            / db.query(Inspection).filter(Inspection.machine_id == m.id).count() * 100, 2
+        ) if db.query(Inspection).filter(Inspection.machine_id == m.id).count() else 0.0,
         risk_score=risk_res["risk_score"],
         created_at=m.created_at
     )
