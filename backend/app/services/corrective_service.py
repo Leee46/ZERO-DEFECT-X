@@ -14,7 +14,7 @@ class CorrectiveActionService:
     Manages the closed-loop Corrective Action lifecycle:
     - Recommended / Open
     - In Progress (captures BEFORE condition snapshot)
-    - Completed (creates NEW MachineParameter record with deterministic adjustment)
+    - Completed (syncs the corrective action to the virtual factory and records returned telemetry)
     - Verified (linked to reinspection result)
     """
 
@@ -86,7 +86,9 @@ class CorrectiveActionService:
         notes: Optional[str] = None
     ) -> CorrectiveAction:
         insp = db.query(Inspection).filter(Inspection.id == inspection_id).first()
-        m_id = machine_id or (insp.machine_id if insp else "M03")
+        if not insp and not machine_id:
+            raise ValueError(f"Inspection {inspection_id} not found")
+        m_id = machine_id or insp.machine_id
 
         # Snapshot before conditions
         before_snap = self._get_machine_snapshot(db, m_id)
@@ -127,13 +129,15 @@ class CorrectiveActionService:
             raise ValueError(f"Corrective action {action_id} not found")
 
         action.status = "In Progress"
-        action.started_at = datetime.datetime.utcnow()
+        action.started_at = datetime.datetime.now(datetime.timezone.utc)
         if notes:
             action.notes = f"{action.notes}\n{notes}".strip() if action.notes else notes
 
         # Update snapshot to current before state if not set
         if not action.before_snapshot:
-            action.before_snapshot = self._get_machine_snapshot(db, action.machine_id or "M03")
+            if not action.machine_id:
+                raise ValueError(f"Corrective action {action_id} has no machine association")
+            action.before_snapshot = self._get_machine_snapshot(db, action.machine_id)
 
         db.commit()
         db.refresh(action)
@@ -149,50 +153,21 @@ class CorrectiveActionService:
         if not action:
             raise ValueError(f"Corrective action {action_id} not found")
 
-        m_id = action.machine_id or "M03"
+        if not action.machine_id:
+            raise ValueError(f"Corrective action {action_id} has no machine association")
+        m_id = action.machine_id
         machine = db.query(Machine).filter(Machine.id == m_id).first()
-        now = datetime.datetime.utcnow()
+        if not machine:
+            raise ValueError(f"Machine {m_id} not found")
+        now = datetime.datetime.now(datetime.timezone.utc)
 
-        # Deterministic machine condition update:
-        # Instead of modifying historical records, create a NEW MachineParameter record
-        # M03 vibration drops from elevated (e.g. 4.8 mm/s) to normal baseline (2.7 mm/s)
-        # Temperature stabilizes to normal range (68.0 °C)
-        new_param = MachineParameter(
-            machine_id=m_id,
-            timestamp=now,
-            temperature=68.0,
-            vibration=2.7,
-            pressure=6.0,
-            speed=1500
-        )
-        db.add(new_param)
-
-        # Update machine status to NORMAL
-        if machine:
-            machine.status = "NORMAL"
-
-        # Resolve any active vibration alerts on this machine
-        alerts = db.query(Alert).filter(
-            Alert.machine_id == m_id,
-            Alert.status == "ACTIVE"
-        ).all()
-        for alt in alerts:
-            alt.status = "RESOLVED"
-            alt.resolved_at = now
-
-        db.flush()
-
-        # Capture AFTER snapshot
-        after_snap = self._get_machine_snapshot(db, m_id)
-
-        action.status = "Completed"
-        action.completed_at = now
-        action.after_snapshot = after_snap
-        if notes:
-            action.notes = f"{action.notes}\n{notes}".strip() if action.notes else notes
-
-        # Notify Laptop 2 Virtual Factory API if reachable
+        # Apply maintenance to the connected Virtual Factory first. We only persist
+        # telemetry returned by that node; never manufacture a post-maintenance reading.
         laptop2_url = os.environ.get("LAPTOP2_URL", "http://127.0.0.1:8000").strip().rstrip("/")
+        sync_success = False
+        telemetry = None
+        telemetry_data = {}
+        sync_error = None
         try:
             import urllib.request
             import json
@@ -201,15 +176,68 @@ class CorrectiveActionService:
                 "action_type": "dampen_vibration",
                 "target_vibration": 2.7,
                 "notes": "Corrective maintenance applied via Laptop 1"
-            }).encode('utf-8')
+            }).encode("utf-8")
             req = urllib.request.Request(
                 f"{laptop2_url}/api/factory/corrective-action",
                 data=req_data,
                 headers={"Content-Type": "application/json", "User-Agent": "ZeroDefectX/3.0"}
             )
-            urllib.request.urlopen(req, timeout=1.5)
+            with urllib.request.urlopen(req, timeout=1.5) as resp:
+                response_data = json.loads(resp.read().decode("utf-8"))
+                sync_success = bool(response_data.get("success"))
+
+            if sync_success:
+                telemetry_req = urllib.request.Request(
+                    f"{laptop2_url}/api/telemetry?machine_id={m_id}",
+                    headers={"User-Agent": "ZeroDefectX/3.0"}
+                )
+                with urllib.request.urlopen(telemetry_req, timeout=1.5) as resp:
+                    telemetry = json.loads(resp.read().decode("utf-8"))
         except Exception as err:
-            print(f"[Corrective Action Sync] Could not notify Laptop 2 Virtual Factory at {laptop2_url}: {err}")
+            sync_error = str(err)
+
+        if sync_success and telemetry:
+            telemetry_data = telemetry.get("telemetry", telemetry)
+            required = ("temperature", "vibration", "pressure", "speed")
+            if not all(telemetry_data.get(key) is not None for key in required):
+                sync_success = False
+                sync_error = "Virtual Factory returned incomplete telemetry"
+            else:
+                db.add(MachineParameter(
+                    machine_id=m_id,
+                    timestamp=now,
+                    temperature=float(telemetry_data["temperature"]),
+                    vibration=float(telemetry_data["vibration"]),
+                    pressure=float(telemetry_data["pressure"]),
+                    speed=int(telemetry_data["speed"])
+                ))
+                machine.status = telemetry_data.get("status", machine.status)
+                db.flush()
+
+        # Capture the actual state after the attempted action. If the factory is offline,
+        # the snapshot retains the latest measured DB values and verification remains pending.
+        after_snap = self._get_machine_snapshot(db, m_id)
+        after_snap["telemetry_source"] = "VIRTUAL FACTORY" if sync_success else "NO FRESH TELEMETRY"
+        if sync_error:
+            after_snap["telemetry_error"] = sync_error
+
+        action.status = "Completed"
+        action.completed_at = now
+        action.after_snapshot = after_snap
+        if notes:
+            action.notes = f"{action.notes}\n{notes}".strip() if action.notes else notes
+        if not sync_success:
+            action.notes = f"{action.notes}\nPost-maintenance telemetry unavailable; verification requires a fresh machine reading.".strip()
+
+        # Only resolve machine alarms when the connected factory confirmed a normal state.
+        if sync_success and telemetry_data.get("status", "").upper() == "NORMAL":
+            alerts = db.query(Alert).filter(
+                Alert.machine_id == m_id,
+                Alert.status == "ACTIVE"
+            ).all()
+            for alt in alerts:
+                alt.status = "RESOLVED"
+                alt.resolved_at = now
 
         db.commit()
         db.refresh(action)
