@@ -34,8 +34,16 @@ class VerificationService:
             MachineParameter.machine_id == machine_id
         ).order_by(MachineParameter.timestamp.desc()).first()
 
-        vibration = latest_param.vibration if latest_param else 2.0
-        temp = latest_param.temperature if latest_param else 65.0
+        if latest_param is None:
+            return {
+                "verification_status": "REQUIRES FURTHER INVESTIGATION",
+                "verification_message": "Verification cannot be confirmed because no post-maintenance machine telemetry is available.",
+                "follow_up_recommendation": f"Capture a fresh machine parameter reading for {machine_id} and repeat verification.",
+                "is_verified": False
+            }
+
+        vibration = latest_param.vibration
+        temp = latest_param.temperature
 
         is_action_completed = corrective_action is not None and corrective_action.status in ["Completed", "Verified"]
         is_vision_passed = (reinsp_status or "").upper() in ["PASSED", "PASS"]
@@ -131,7 +139,7 @@ class VerificationService:
             batch_id=batch_id,
             machine_id=machine_id,
             image_path=image_path,
-            reinspection_time=datetime.datetime.utcnow(),
+            reinspection_time=datetime.datetime.now(datetime.timezone.utc),
             status=status,
             overall_confidence=overall_confidence,
             defect_detected=(status.upper() != "PASSED"),
