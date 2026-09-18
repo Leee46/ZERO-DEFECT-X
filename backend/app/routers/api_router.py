@@ -98,7 +98,7 @@ async def analyze_uploaded_image(
     telemetry_data = None
     environment_data = None
 
-    raw_env_url = os.environ.get("LAPTOP2_URL", "http://10.10.56.118:8000").strip()
+    raw_env_url = os.environ.get("LAPTOP2_URL", "http://127.0.0.1:8000").strip()
     urls_to_try = []
 
     if raw_env_url:
@@ -115,8 +115,8 @@ async def analyze_uploaded_image(
             urls_to_try.append(f"{base_url}/api/factory/telemetry")
 
     urls_to_try.extend([
-        "http://10.10.56.118:8000/api/telemetry",
-        "http://10.10.56.118:8000/api/factory/telemetry",
+        "http://127.0.0.1:8000/api/telemetry",
+        "http://127.0.0.1:8000/api/factory/telemetry",
         "http://127.0.0.1:8000/api/telemetry",
         "http://localhost:8000/api/telemetry"
     ])
@@ -488,7 +488,7 @@ def create_inspection(
         machine_id=payload.machine_id,
         shift_id=payload.shift_id,
         image_path=payload.image_path,
-        inspection_time=datetime.datetime.utcnow(),
+        inspection_time=datetime.datetime.now(datetime.timezone.utc),
         status=vision_result["status"],
         overall_confidence=vision_result["overall_confidence"]
     )
@@ -1028,7 +1028,7 @@ def get_live_factory_telemetry(machine_id: str = "M03", product_id: str = "RING-
         "factory_status": "Virtual Factory Offline",
         "data_type": "OFFLINE",
         "source_label": "OFFLINE",
-        "message": "Laptop 2 Virtual Factory unreachable at 10.10.56.118:8000"
+        "message": "Laptop 2 Virtual Factory is unreachable. Configure LAPTOP2_URL for a second-machine simulator."
     }
 
 
