@@ -11,7 +11,7 @@ export const getApiBaseUrl = (): string => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
     if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('10.') || host.startsWith('192.168.')) {
-      return `http://${host}:8001/api`;
+      return `http://${host}:8000/api`;
     }
   }
 
