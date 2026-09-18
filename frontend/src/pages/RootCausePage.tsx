@@ -39,13 +39,10 @@ export const RootCausePage: React.FC<RootCausePageProps> = ({ inspectionId, onNa
     return () => { isMounted = false; };
   }, [targetInspection]);
 
-  const probableFactor = rootCauseData?.probable_factor || 'Elevated M03 Vibration Baseline';
-  const candidates = rootCauseData?.candidate_factors || [
-    { factor: 'Elevated Vibration Baseline', evidence_level: 'STRONG', score: 0.84, details: 'Vibration 4.8 mm/s exceeds 2.5 mm/s baseline threshold.' },
-    { factor: 'Elevated Temperature Reading', evidence_level: 'MODERATE', score: 0.65, details: 'Temperature 72°C observed during defect timestamp.' }
-  ];
-  const currentCondition = rootCauseData?.current_condition || 'Vibration 4.8 mm/s | Temp 72°C | Pressure 6.2 bar | Speed 1480 RPM';
-  const histComp = rootCauseData?.historical_comparison || { normal_vibration_defect_rate: 1.2, elevated_vibration_defect_rate: 14.5, matching_historical_count: 18 };
+  const probableFactor = rootCauseData?.probable_factor || 'Analysis unavailable';
+  const candidates = rootCauseData?.candidate_factors || [];
+  const currentCondition = rootCauseData?.current_condition || 'Telemetry unavailable';
+  const histComp = rootCauseData?.historical_comparison || { normal_vibration_defect_rate: null, elevated_vibration_defect_rate: null, matching_historical_count: 0 };
   const isNormal = targetInspection.status === 'PASS' || rootCauseData?.status === 'PASSED';
 
   const chartData = candidates.map((c: any) => ({
@@ -80,7 +77,7 @@ export const RootCausePage: React.FC<RootCausePageProps> = ({ inspectionId, onNa
                 {probableFactor}
               </span>
               <span style={{ fontSize: '0.8rem', color: '#8D9AAA' }}>
-                Requires Physical Verification: <strong style={{ color: '#D99A2B' }}>TRUE</strong> | Supporting DB Records: <strong style={{ color: '#E8EDF3' }}>{rootCauseData?.supporting_records_count || 18}</strong>
+                Requires Physical Verification: <strong style={{ color: '#D99A2B' }}>TRUE</strong> | Supporting DB Records: <strong style={{ color: '#E8EDF3' }}>{rootCauseData?.supporting_records_count ?? 0}</strong>
               </span>
             </div>
 
@@ -120,11 +117,11 @@ export const RootCausePage: React.FC<RootCausePageProps> = ({ inspectionId, onNa
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', textAlign: 'center' }}>
                   <div style={{ backgroundColor: '#121C2C', padding: '0.5rem', borderRadius: '3px' }}>
                     <span style={{ fontSize: '0.7rem', color: '#8D9AAA', display: 'block' }}>Normal Baseline Defect Rate</span>
-                    <span style={{ fontSize: '1rem', fontWeight: 700, color: '#22A06B', fontFamily: 'var(--font-mono)' }}>{histComp.normal_vibration_defect_rate}%</span>
+                    <span style={{ fontSize: '1rem', fontWeight: 700, color: '#22A06B', fontFamily: 'var(--font-mono)' }}>{histComp.normal_vibration_defect_rate == null ? 'N/A' : `${histComp.normal_vibration_defect_rate}%`}</span>
                   </div>
                   <div style={{ backgroundColor: '#121C2C', padding: '0.5rem', borderRadius: '3px' }}>
                     <span style={{ fontSize: '0.7rem', color: '#8D9AAA', display: 'block' }}>Elevated Parameter Rate</span>
-                    <span style={{ fontSize: '1rem', fontWeight: 700, color: '#E55353', fontFamily: 'var(--font-mono)' }}>{histComp.elevated_vibration_defect_rate}%</span>
+                    <span style={{ fontSize: '1rem', fontWeight: 700, color: '#E55353', fontFamily: 'var(--font-mono)' }}>{histComp.elevated_vibration_defect_rate == null ? 'N/A' : `${histComp.elevated_vibration_defect_rate}%`}</span>
                   </div>
                   <div style={{ backgroundColor: '#121C2C', padding: '0.5rem', borderRadius: '3px' }}>
                     <span style={{ fontSize: '0.7rem', color: '#8D9AAA', display: 'block' }}>Matching Historical Inspections</span>
