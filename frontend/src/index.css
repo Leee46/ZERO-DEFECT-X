@@ -1,0 +1,321 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --bg-dark: #0B1220;
+  --card-bg: #121C2C;
+  --surface-secondary: #162235;
+  --border-color: #26364A;
+  --border-color-focus: #4F7CAC;
+  
+  --text-primary: #E8EDF3;
+  --text-secondary: #8D9AAA;
+  --text-muted: #5C6B7E;
+  
+  --system-blue: #4F7CAC;
+  --active-blue: #2F6F9F;
+  --blue-glow: rgba(79, 124, 172, 0.25);
+  
+  --status-safe: #22A06B;
+  --status-safe-bg: rgba(34, 160, 107, 0.12);
+  --status-warning: #D99A2B;
+  --status-warning-bg: rgba(217, 154, 43, 0.12);
+  --status-critical: #E55353;
+  --status-critical-bg: rgba(229, 83, 83, 0.15);
+  --status-info: #3B82F6;
+  --status-info-bg: rgba(59, 130, 246, 0.12);
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Custom Industrial Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--system-blue);
+}
+
+/* Typography Helpers */
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Common Industrial Components */
+.scada-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.scada-card:hover {
+  border-color: rgba(79, 124, 172, 0.5);
+}
+
+.scada-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.scada-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Industrial Buttons */
+.scada-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  outline: none;
+}
+
+.scada-btn-primary {
+  background-color: var(--active-blue);
+  color: #FFFFFF;
+  border-color: var(--system-blue);
+}
+.scada-btn-primary:hover {
+  background-color: var(--system-blue);
+  box-shadow: 0 0 10px var(--blue-glow);
+}
+
+.scada-btn-secondary {
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+.scada-btn-secondary:hover {
+  background-color: var(--border-color);
+  color: #FFFFFF;
+}
+
+.scada-btn-danger {
+  background-color: var(--status-critical-bg);
+  color: var(--status-critical);
+  border-color: rgba(229, 83, 83, 0.4);
+}
+.scada-btn-danger:hover {
+  background-color: var(--status-critical);
+  color: #FFFFFF;
+}
+
+.scada-btn-sm {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+/* Status Badges */
+.scada-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.scada-badge-safe {
+  background-color: var(--status-safe-bg);
+  color: var(--status-safe);
+  border: 1px solid rgba(34, 160, 107, 0.3);
+}
+
+.scada-badge-warning {
+  background-color: var(--status-warning-bg);
+  color: var(--status-warning);
+  border: 1px solid rgba(217, 154, 43, 0.3);
+}
+
+.scada-badge-critical {
+  background-color: var(--status-critical-bg);
+  color: var(--status-critical);
+  border: 1px solid rgba(229, 83, 83, 0.4);
+}
+
+.scada-badge-info {
+  background-color: var(--status-info-bg);
+  color: var(--status-info);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.scada-badge-neutral {
+  background-color: var(--surface-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+/* Pulsing Status Indicator Dots */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.status-dot-safe {
+  background-color: var(--status-safe);
+  box-shadow: 0 0 6px var(--status-safe);
+}
+.status-dot-warning {
+  background-color: var(--status-warning);
+  box-shadow: 0 0 6px var(--status-warning);
+  animation: pulse-warn 1.5s infinite;
+}
+.status-dot-critical {
+  background-color: var(--status-critical);
+  box-shadow: 0 0 8px var(--status-critical);
+  animation: pulse-crit 1s infinite;
+}
+
+@keyframes pulse-warn {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes pulse-crit {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.2); }
+}
+
+/* Industrial Data Tables */
+.scada-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.scada-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.825rem;
+}
+
+.scada-table th {
+  background-color: var(--surface-secondary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.725rem;
+  letter-spacing: 0.05em;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.scada-table td {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.scada-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.scada-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.scada-table tbody tr:hover {
+  background-color: var(--surface-secondary);
+  cursor: pointer;
+}
+
+/* Form Inputs */
+.scada-input, .scada-select {
+  width: 100%;
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.55rem 0.75rem;
+  border-radius: 4px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.scada-input:focus, .scada-select:focus {
+  border-color: var(--system-blue);
+  box-shadow: 0 0 0 2px var(--blue-glow);
+}
+
+.scada-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 0.35rem;
+  letter-spacing: 0.03em;
+}
+
+/* Controlled Demo Banner Badge */
+.demo-badge-header {
+  background: linear-gradient(90deg, #1E293B, #0F172A);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--system-blue);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 3px;
+}
