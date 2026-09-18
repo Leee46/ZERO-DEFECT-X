@@ -513,20 +513,43 @@ def get_defects(db: Session = Depends(get_db)):
 # 9. Analytics API
 @router.get("/analytics")
 def get_analytics(db: Session = Depends(get_db)):
+    inspections = db.query(Inspection).order_by(Inspection.inspection_time.asc()).all()
+
+    monthly = {}
+    for inspection in inspections:
+        if not inspection.inspection_time:
+            continue
+        key = inspection.inspection_time.strftime("%Y-%m")
+        bucket = monthly.setdefault(key, {"inspected": 0, "defects": 0})
+        bucket["inspected"] += 1
+        if inspection.status == "DEFECTIVE":
+            bucket["defects"] += 1
+
+    monthly_trend = []
+    for key, bucket in sorted(monthly.items()):
+        monthly_trend.append({
+            "month": key,
+            "inspected": bucket["inspected"],
+            "defects": bucket["defects"],
+            "rate": round(bucket["defects"] / bucket["inspected"] * 100, 2) if bucket["inspected"] else 0.0
+        })
+
+    machine_breakdown = []
+    for machine in db.query(Machine).all():
+        inspected = db.query(Inspection).filter(Inspection.machine_id == machine.id).count()
+        defective = db.query(Inspection).filter(
+            Inspection.machine_id == machine.id,
+            Inspection.status == "DEFECTIVE"
+        ).count()
+        machine_breakdown.append({
+            "machine": machine.id,
+            "normal": max(0, inspected - defective),
+            "defective": defective
+        })
+
     return {
-        "monthly_trend": [
-            {"month": "May", "inspected": 1100, "defects": 22, "rate": 2.0},
-            {"month": "Jun", "inspected": 1180, "defects": 28, "rate": 2.37},
-            {"month": "Jul", "inspected": 1250, "defects": 31, "rate": 2.48},
-            {"month": "Aug", "inspected": 1290, "defects": 35, "rate": 2.71},
-            {"month": "Sep", "inspected": 1248, "defects": 37, "rate": 2.96},
-        ],
-        "machine_breakdown": [
-            {"machine": "M01", "normal": 416, "defective": 4},
-            {"machine": "M02", "normal": 374, "defective": 6},
-            {"machine": "M03", "normal": 283, "defective": 27},
-            {"machine": "M04", "normal": 138, "defective": 0},
-        ]
+        "monthly_trend": monthly_trend,
+        "machine_breakdown": machine_breakdown
     }
 
 
