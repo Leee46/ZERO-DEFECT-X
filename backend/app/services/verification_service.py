@@ -37,8 +37,8 @@ class VerificationService:
         if latest_param is None:
             return {
                 "verification_status": "REQUIRES FURTHER INVESTIGATION",
-                "verification_message": "Verification cannot be confirmed because no post-maintenance machine telemetry is available.",
-                "follow_up_recommendation": f"Capture a fresh machine parameter reading for {machine_id} and repeat verification.",
+                "verification_message": "Verification cannot be confirmed because no machine telemetry is available.",
+                "follow_up_recommendation": f"Capture a fresh machine parameter reading for {machine_id} after maintenance and repeat verification.",
                 "is_verified": False
             }
 
@@ -47,7 +47,28 @@ class VerificationService:
 
         is_action_completed = corrective_action is not None and corrective_action.status in ["Completed", "Verified"]
         is_vision_passed = (reinsp_status or "").upper() in ["PASSED", "PASS"]
+
+        # A pre-maintenance reading cannot prove recovery. Require telemetry captured
+        # after the corrective action was completed.
+        telemetry_is_post_maintenance = True
+        if corrective_action and corrective_action.completed_at and latest_param.timestamp:
+            completed_at = corrective_action.completed_at
+            reading_at = latest_param.timestamp
+            if completed_at.tzinfo is None and reading_at.tzinfo is not None:
+                completed_at = completed_at.replace(tzinfo=datetime.timezone.utc)
+            elif completed_at.tzinfo is not None and reading_at.tzinfo is None:
+                reading_at = reading_at.replace(tzinfo=datetime.timezone.utc)
+            telemetry_is_post_maintenance = reading_at >= completed_at
+
         is_condition_normalized = vibration <= 3.2 and temp <= 70.0
+
+        if not telemetry_is_post_maintenance:
+            return {
+                "verification_status": "REQUIRES FURTHER INVESTIGATION",
+                "verification_message": "Verification cannot be confirmed because the latest telemetry reading predates corrective-action completion.",
+                "follow_up_recommendation": f"Capture a fresh post-maintenance machine parameter reading for {machine_id} and repeat verification.",
+                "is_verified": False
+            }
 
         if is_action_completed and is_vision_passed and is_condition_normalized:
             return {
@@ -62,8 +83,10 @@ class VerificationService:
                 reasons.append("Corrective action has not been completed")
             if not is_vision_passed:
                 reasons.append("Reinspection vision analysis detected defects")
-            if not is_condition_normalized:
+            if vibration > 3.2:
                 reasons.append(f"Machine vibration ({vibration} mm/s) remains elevated above 3.2 mm/s threshold")
+            if temp > 70.0:
+                reasons.append(f"Machine temperature ({temp}°C) remains elevated above 70°C threshold")
 
             return {
                 "verification_status": "REQUIRES FURTHER INVESTIGATION",
@@ -86,9 +109,11 @@ class VerificationService:
         orig_insp = db.query(Inspection).filter(Inspection.id == original_inspection_id).first()
         ca = db.query(CorrectiveAction).filter(CorrectiveAction.id == corrective_action_id).first() if corrective_action_id else None
 
-        machine_id = orig_insp.machine_id if orig_insp else (ca.machine_id if ca else "M03")
-        product_id = orig_insp.product_id if orig_insp else "P1042-087"
-        batch_id = orig_insp.batch_id if orig_insp else "B1042"
+        if not orig_insp:
+            raise ValueError(f"Original inspection {original_inspection_id} not found")
+        machine_id = orig_insp.machine_id
+        product_id = orig_insp.product_id
+        batch_id = orig_insp.batch_id
 
         # Evaluate verification deterministically
         verif_eval = self.evaluate_verification(db, status, ca, machine_id)
@@ -99,8 +124,8 @@ class VerificationService:
         before_temp = before_snapshot.get("temperature")
         before_risk = before_snapshot.get("risk_level", "UNKNOWN")
 
-        orig_defect = orig_insp.defects[0].defect_type if orig_insp and orig_insp.defects else "Scratch"
-        orig_severity = orig_insp.defects[0].severity if orig_insp and orig_insp.defects else "Medium"
+        orig_defect = orig_insp.defects[0].defect_type if orig_insp.defects else "None"
+        orig_severity = orig_insp.defects[0].severity if orig_insp.defects else "N/A"
 
         before_cond = {
             "vibration": f"{before_vibe} mm/s" if before_vibe is not None else "N/A",
