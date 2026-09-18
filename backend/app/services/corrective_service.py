@@ -108,7 +108,7 @@ class CorrectiveActionService:
             status="Open",
             assigned_to=assigned_to,
             notes=notes,
-            created_at=datetime.datetime.utcnow(),
+            created_at=datetime.datetime.now(datetime.timezone.utc),
             before_snapshot=before_snap
         )
         db.add(action)
