@@ -61,12 +61,12 @@ class MachineCreate(MachineBase):
 
 class MachineOut(MachineBase):
     id: str
-    temperature: Optional[float] = 65.0
-    vibration: Optional[float] = 2.0
-    pressure: Optional[float] = 6.0
-    speed: Optional[int] = 1500
-    defect_rate: Optional[float] = 1.2
-    risk_score: Optional[int] = 15
+    temperature: Optional[float] = None
+    vibration: Optional[float] = None
+    pressure: Optional[float] = None
+    speed: Optional[int] = None
+    defect_rate: Optional[float] = None
+    risk_score: Optional[int] = None
     created_at: Optional[datetime] = None
 
     class Config:
@@ -233,7 +233,7 @@ class ReinspectionCreate(BaseModel):
     image_path: Optional[str] = None
     status: str = "PASSED"
     defect_detected: bool = False
-    overall_confidence: Optional[float] = 0.95
+    overall_confidence: Optional[float] = None
     defects: Optional[List[Dict[str, Any]]] = None
     verification_status: Optional[str] = "PENDING"
     verification_notes: Optional[str] = None
