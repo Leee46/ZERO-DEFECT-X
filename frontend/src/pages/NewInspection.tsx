@@ -6,7 +6,7 @@ import { WorkflowStepper } from '../components/workflow/WorkflowStepper';
 import { DemoBanner } from '../components/common/DemoBanner';
 import { QrCodeDisplay } from '../components/common/QrCodeDisplay';
 import { MobileInspection } from './MobileInspection';
-import { Upload, Camera, Play, RefreshCw, AlertTriangle, FileCheck, Smartphone } from 'lucide-react';
+import { Upload, Camera, Play, RefreshCw, AlertTriangle, FileCheck } from 'lucide-react';
 
 interface NewInspectionProps {
   onNavigate: (tabId: string, params?: any) => void;

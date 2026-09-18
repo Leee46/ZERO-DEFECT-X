@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Inspection } from '../../types';
 import { Badge } from '../common/Badge';
-import { AlertOctagon, CheckCircle2, MapPin, Search, ShieldAlert } from 'lucide-react';
+import { AlertOctagon, CheckCircle2, MapPin } from 'lucide-react';
 
 interface DefectSummaryCardProps {
   inspection: Inspection;

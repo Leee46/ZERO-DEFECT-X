@@ -19,6 +19,7 @@ export interface BoundingBox {
 export interface DefectItem {
   id: string;
   type: DefectType;
+  defect_type?: string;
   confidence: number;
   severity: SeverityLevel;
   location: string;
@@ -137,19 +138,28 @@ export interface ReinspectionRecord {
 export interface Inspection {
   id: string;
   productId: string;
+  product_id?: string;
   batchId: string;
+  batch_id?: string;
   machineId: string;
+  machine_id?: string;
   shift: string;
+  shift_id?: string;
   timestamp: string;
-  status: 'PASS' | 'DEFECTIVE';
+  status: 'PASS' | 'DEFECTIVE' | string;
   defects: DefectItem[];
   imageUrl: string;
   imageThumbnail?: string;
   parameters: MachineParameters;
   rootCause?: RootCauseResult | null;
+  root_cause?: any;
   riskAssessment?: RiskAssessment | null;
   correctiveAction?: CorrectiveActionItem | null;
   isControlledDemo?: boolean;
+  overall_confidence?: number;
+  anomaly_score?: number;
+  factory_status?: string;
+  factory_source_label?: string;
 }
 
 export interface Machine {

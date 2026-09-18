@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import type { DefectItem } from '../../types';
-import { ZoomIn, Layers, Crosshair, Eye, ShieldCheck, Camera } from 'lucide-react';
+import { ZoomIn, Layers, Crosshair, Eye, Camera } from 'lucide-react';
 import { Badge } from '../common/Badge';
+import { getApiBaseUrl } from '../../services/apiClient';
 
 interface VisionViewerProps {
   imageUrl: string;
@@ -27,9 +28,10 @@ export const VisionViewer: React.FC<VisionViewerProps> = ({
   // Normalize image URL for backend static serving
   const resolveUrl = (url: string) => {
     if (!url) return '/images/sample.jpg';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
     if (url.startsWith('/uploads/') || url.startsWith('/static/')) {
-      const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-      return `http://${host}:8000${url}`;
+      const apiBase = getApiBaseUrl().replace(/\/api\/?$/, '');
+      return `${apiBase}${url}`;
     }
     return url;
   };

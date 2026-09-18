@@ -1,12 +1,21 @@
-const getApiBaseUrl = (): string => {
+export const getApiBaseUrl = (): string => {
   const envUrl = import.meta.env.VITE_API_URL;
-  if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
-    return envUrl;
+  if (envUrl && envUrl.trim()) {
+    let clean = envUrl.trim().replace(/\/+$/, '');
+    if (!clean.endsWith('/api')) {
+      clean += '/api';
+    }
+    return clean;
   }
-  if (typeof window !== 'undefined' && window.location.hostname) {
-    return `http://${window.location.hostname}:8001/api`;
+
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('10.') || host.startsWith('192.168.')) {
+      return `http://${host}:8001/api`;
+    }
   }
-  return 'http://localhost:8001/api';
+
+  return 'https://zero-defect-x-backend.onrender.com/api';
 };
 
 export class ApiClient {

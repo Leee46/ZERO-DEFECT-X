@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Upload, CheckCircle2, AlertTriangle, RefreshCw, Smartphone, Layers, Activity, ArrowRight } from 'lucide-react';
+import { Camera, Upload, CheckCircle2, AlertTriangle, RefreshCw, Smartphone, ArrowRight } from 'lucide-react';
 import { apiClient } from '../services/apiClient';
 
 interface MobileInspectionProps {

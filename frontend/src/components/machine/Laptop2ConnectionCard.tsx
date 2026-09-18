@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Server, Wifi, WifiOff, Activity, Thermometer, Gauge, Clock, Cpu, Layers } from 'lucide-react';
+import { Server, Wifi, WifiOff } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 
 export const Laptop2ConnectionCard: React.FC = () => {
   const [telemetry, setTelemetry] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(true);
 
   const fetchStatus = async () => {
     try {
@@ -16,8 +15,6 @@ export const Laptop2ConnectionCard: React.FC = () => {
         factory_status: 'Virtual Factory Offline',
         source_label: 'OFFLINE'
       });
-    } finally {
-      setLoading(false);
     }
   };
 
