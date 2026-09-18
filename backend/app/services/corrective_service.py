@@ -46,7 +46,7 @@ class CorrectiveActionService:
             "risk_score": risk_res.get("risk_score", 15),
             "risk_level": risk_res.get("risk_level", "LOW"),
             "defect_rate": defect_rate,
-            "timestamp": datetime.datetime.utcnow().isoformat()
+            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
         }
 
     def _generate_recommended_actions(self, probable_factor: Optional[str], machine_id: str) -> List[str]:
@@ -192,7 +192,7 @@ class CorrectiveActionService:
             action.notes = f"{action.notes}\n{notes}".strip() if action.notes else notes
 
         # Notify Laptop 2 Virtual Factory API if reachable
-        laptop2_url = os.environ.get("LAPTOP2_URL", "http://10.94.201.30:8001")
+        laptop2_url = os.environ.get("LAPTOP2_URL", "http://127.0.0.1:8000").strip().rstrip("/")
         try:
             import urllib.request
             import json
