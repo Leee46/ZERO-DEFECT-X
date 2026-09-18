@@ -74,7 +74,9 @@ async def analyze_uploaded_image(
         db.add(prod)
         db.flush()
 
-    actual_shift_id = shift_id if shift_id in ["S1", "S2", "S3"] else ("S1" if "A" in shift_id else ("S2" if "B" in shift_id else "S3"))
+    if shift_id not in {"S1", "S2", "S3"}:
+        raise HTTPException(status_code=400, detail="Invalid shift_id. Use S1, S2, or S3.")
+    actual_shift_id = shift_id
 
     batch = db.query(Batch).filter(Batch.id == batch_id).first()
     if not batch:
@@ -276,7 +278,7 @@ def health_check():
     return {
         "status": "ok",
         "service": "ZERO-DEFECT X backend",
-        "timestamp": datetime.datetime.utcnow().isoformat()
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
     }
 
 
