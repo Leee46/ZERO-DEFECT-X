@@ -28,12 +28,12 @@ export interface DefectItem {
 }
 
 export interface MachineParameters {
-  temperature: number; // °C
-  vibration: number;   // mm/s
-  pressure: number;    // bar
-  speed: number;       // RPM
-  envTemp: number;     // °C
-  envHumidity: number; // %
+  temperature: number | null; // °C
+  vibration: number | null;   // mm/s
+  pressure: number | null;    // bar
+  speed: number | null;       // RPM
+  envTemp: number | null;     // °C
+  envHumidity: number | null; // %
 }
 
 export interface FactorBreakdown {
