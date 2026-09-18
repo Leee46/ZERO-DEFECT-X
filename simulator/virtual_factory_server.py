@@ -40,6 +40,11 @@ if not os.path.exists(factory_dir):
 if os.path.exists(factory_dir):
     app.mount("/factory", StaticFiles(directory=factory_dir, html=True), name="factory")
 
+@app.get("/factory")
+def redirect_to_factory_slash():
+    return RedirectResponse(url="/factory/")
+
+
 
 # Simulated Factory State Store
 FACTORY_STATE = {

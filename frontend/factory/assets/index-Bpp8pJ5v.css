@@ -31,11 +31,12 @@ body {
 }
 
 .scada-container {
-  max-width: 1300px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: 1.25rem;
 }
 
+/* Header */
 .scada-header {
   display: flex;
   justify-content: space-between;
@@ -44,8 +45,8 @@ body {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  margin-bottom: 1.25rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 }
 
 .scada-title-box {
@@ -55,26 +56,26 @@ body {
 }
 
 .scada-title-icon {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   background-color: rgba(79, 124, 172, 0.15);
   border: 1px solid var(--accent-blue);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent-blue);
+  color: var(--accent-cyan);
 }
 
 .scada-title-text h1 {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   color: #FFFFFF;
 }
 
 .scada-title-text p {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--text-muted);
 }
 
@@ -82,34 +83,156 @@ body {
   background: linear-gradient(90deg, rgba(79, 124, 172, 0.2) 0%, rgba(0, 210, 255, 0.1) 100%);
   border: 1px solid var(--accent-blue);
   color: #60A5FA;
-  padding: 0.65rem 1rem;
+  padding: 0.6rem 1rem;
   border-radius: 6px;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .sim-tag {
   background-color: var(--accent-blue);
-  color: #000;
-  padding: 0.15rem 0.45rem;
-  border-radius: 3px;
+  color: #000000;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.05em;
 }
 
-.scada-grid {
+/* KPI Counter Bar */
+.kpi-bar {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 1.25rem;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.85rem;
+  margin-bottom: 1rem;
 }
 
-@media (max-width: 960px) {
-  .scada-grid {
+@media (max-width: 900px) {
+  .kpi-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.kpi-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.75rem 0.9rem;
+  text-align: center;
+}
+
+.kpi-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-value {
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin-top: 0.2rem;
+}
+
+/* Digital Factory Conveyor Canvas */
+.conveyor-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.conveyor-track {
+  background: #0D1522;
+  border: 1px solid #1E2D42;
+  border-radius: 8px;
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.conveyor-belt {
+  height: 8px;
+  background: repeating-linear-gradient(90deg, #26364A, #26364A 20px, #162235 20px, #162235 40px);
+  border-radius: 4px;
+  margin: 1.5rem 0;
+  animation: moveBelt 2s linear infinite;
+}
+
+@keyframes moveBelt {
+  0% { background-position: 0 0; }
+  100% { background-position: 40px 0; }
+}
+
+.machine-nodes-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+  position: relative;
+  z-index: 2;
+}
+
+.machine-box {
+  background-color: var(--bg-card-alt);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.85rem 0.6rem;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.machine-box.warning {
+  border-color: var(--status-warning);
+  background-color: rgba(245, 158, 11, 0.12);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+}
+
+.machine-box.active {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 10px rgba(0, 210, 255, 0.2);
+}
+
+.machine-id {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.machine-name {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.machine-status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 0.3rem;
+}
+
+.machine-status-dot.green { background-color: var(--status-success); }
+.machine-status-dot.yellow { background-color: var(--status-warning); }
+
+/* Main Grid Layout */
+.main-scada-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .main-scada-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -118,176 +241,111 @@ body {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 1.25rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  margin-bottom: 1.25rem;
+  padding: 1rem 1.15rem;
+  margin-bottom: 1rem;
 }
 
-.card-title {
-  font-size: 0.92rem;
-  font-weight: 700;
+.card-header-title {
+  font-size: 0.88rem;
+  font-weight: 800;
   letter-spacing: 0.05em;
   color: var(--text-main);
-  margin-bottom: 1rem;
+  margin-bottom: 0.85rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   text-transform: uppercase;
 }
 
-/* Process Pipeline visual */
-.pipeline-flow {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  overflow-x: auto;
-  padding: 0.75rem 0.25rem;
-}
-
-.pipeline-node {
-  flex: 1;
-  min-width: 105px;
-  background-color: var(--bg-card-alt);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 0.65rem 0.5rem;
-  text-align: center;
-  position: relative;
-  transition: all 0.2s ease;
-}
-
-.pipeline-node.active {
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 10px rgba(79, 124, 172, 0.3);
-}
-
-.pipeline-node.warning {
-  border-color: var(--status-warning);
-  background-color: rgba(245, 158, 11, 0.1);
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
-}
-
-.pipeline-node-code {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: #FFFFFF;
-}
-
-.pipeline-node-label {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  margin-top: 0.2rem;
-}
-
-.pipeline-arrow {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  font-weight: bold;
-}
-
-/* Sensor Meters */
-.meters-grid {
+/* Control Buttons */
+.controls-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
 }
 
-@media (max-width: 640px) {
-  .meters-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.meter-box {
-  background-color: var(--bg-card-alt);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 0.85rem;
-  text-align: center;
-}
-
-.meter-box.warning {
-  border-color: var(--status-warning);
-}
-
-.meter-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.meter-value {
-  font-family: var(--font-mono);
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #FFFFFF;
-  margin: 0.3rem 0;
-}
-
-.meter-unit {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-}
-
-/* Action Controls */
-.btn-control {
-  width: 100%;
-  padding: 0.75rem 1rem;
+.btn-ctrl {
+  padding: 0.65rem 0.85rem;
   border-radius: 6px;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   cursor: pointer;
   border: none;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 0.65rem;
+  gap: 0.4rem;
 }
 
-.btn-primary {
-  background-color: var(--accent-blue);
-  color: #FFFFFF;
+.btn-play { background-color: var(--status-success); color: #FFFFFF; }
+.btn-pause { background-color: var(--status-warning); color: #000000; }
+.btn-reset { background-color: #374151; color: #FFFFFF; }
+.btn-fault { background-color: var(--status-critical); color: #FFFFFF; }
+.btn-corrective { background-color: var(--accent-blue); color: #FFFFFF; }
+.btn-inspect { background-color: #8B5CF6; color: #FFFFFF; }
+
+.btn-ctrl:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
-.btn-primary:hover {
-  background-color: #3B6491;
-}
-
-.btn-warning {
-  background-color: var(--status-warning);
-  color: #000000;
-}
-
-.btn-warning:hover {
-  background-color: #D97706;
-}
-
-.btn-danger {
-  background-color: var(--status-critical);
-  color: #FFFFFF;
-}
-
-.btn-danger:hover {
-  background-color: #B91C1C;
-}
-
-.status-badge {
-  display: inline-flex;
+.speed-slider-box {
+  background-color: var(--bg-card-alt);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.65rem 0.85rem;
+  margin-top: 0.65rem;
+  display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem 0.65rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 800;
+  justify-content: space-between;
 }
 
-.status-badge.online {
-  background-color: rgba(34, 160, 107, 0.2);
-  border: 1px solid var(--status-success);
-  color: var(--status-success);
+/* Telemetry Gauges */
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
 }
+
+.gauge-card {
+  background-color: var(--bg-card-alt);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.gauge-card.warning {
+  border-color: var(--status-warning);
+}
+
+.gauge-val {
+  font-family: var(--font-mono);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+/* Event Log Terminal */
+.event-log-box {
+  background-color: #06090F;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.75rem;
+  height: 180px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  line-height: 1.6;
+}
+
+.log-entry {
+  margin-bottom: 0.25rem;
+}
+
+.log-entry.info { color: #60A5FA; }
+.log-entry.warning { color: #F59E0B; }
+.log-entry.success { color: #34D399; }
+.log-entry.error { color: #F87171; }
