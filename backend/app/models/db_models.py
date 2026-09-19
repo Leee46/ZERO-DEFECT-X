@@ -204,7 +204,7 @@ class Reinspection(Base):
     image_path = Column(String, nullable=True)
     reinspection_time = Column(DateTime, default=datetime.datetime.utcnow)
     status = Column(String, nullable=False, default="PASSED") # PASSED, DEFECTIVE
-    overall_confidence = Column(Float, nullable=True, default=0.95)
+    overall_confidence = Column(Float, nullable=True, default=None)
     defect_detected = Column(Boolean, default=False)
     defects = Column(JSON, nullable=True)
     verification_status = Column(String, nullable=True, default="PENDING") # VERIFIED, REQUIRES FURTHER INVESTIGATION
