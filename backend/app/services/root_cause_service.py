@@ -84,9 +84,9 @@ class ProbableCauseEngine:
             MachineParameter.machine_id == target_machine_id
         ).order_by(MachineParameter.timestamp.asc()).all()
 
+        # Never substitute an unrelated latest reading for the inspection-time state.
+        # If synchronized telemetry is unavailable, current-condition fields remain unknown.
         current_param = self._nearest_parameter(parameters, insp.inspection_time)
-        if current_param is None and parameters:
-            current_param = parameters[-1]
 
         latest_env = db.query(EnvironmentReading).order_by(
             EnvironmentReading.timestamp.desc()
