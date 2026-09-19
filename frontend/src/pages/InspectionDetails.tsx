@@ -23,7 +23,31 @@ export const InspectionDetails: React.FC<InspectionDetailsProps> = ({ inspection
         try {
           const remote = await apiClient.get<any>(`/inspections/${inspectionId}`);
           if (remote && isMounted) {
-            setInspection(remote);
+            const normalized = {
+              ...remote,
+              status: remote.status,
+              productId: remote.product_id || remote.productId,
+              batchId: remote.batch_id || remote.batchId,
+              machineId: remote.machine_id || remote.machineId,
+              shift: remote.shift_id || remote.shift,
+              imageUrl: remote.image_path || remote.imageUrl || '',
+              defects: (remote.defects || []).map((d: any, idx: number) => ({
+                ...d,
+                id: d.id || `DEF-${idx}`,
+                type: d.defect_type || d.type || 'Surface Anomaly',
+                confidence: d.confidence ?? 0,
+                boundingBox: d.x_min != null && d.y_min != null && d.x_max != null && d.y_max != null
+                  ? {
+                      x: Number(d.x_min) * 800,
+                      y: Number(d.y_min) * 600,
+                      width: Math.max(0, Number(d.x_max) - Number(d.x_min)) * 800,
+                      height: Math.max(0, Number(d.y_max) - Number(d.y_min)) * 600,
+                      label: d.defect_type || 'DEFECT'
+                    }
+                  : undefined
+              }))
+            };
+            setInspection(normalized);
             return;
           }
         } catch (e) {
