@@ -106,7 +106,7 @@ class Inspection(Base):
     image_path = Column(String, nullable=True)
     inspection_time = Column(DateTime, default=datetime.datetime.utcnow)
     status = Column(String, nullable=False, default="PASSED") # PASSED, DEFECTIVE, FLAGGED
-    overall_confidence = Column(Float, nullable=False, default=0.95)
+    overall_confidence = Column(Float, nullable=True, default=None)
 
     # Relationships
     product = relationship("Product", back_populates="inspections")
