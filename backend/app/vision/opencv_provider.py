@@ -106,8 +106,8 @@ class OpenCVVisionProvider(VisionProvider):
                 )
                 long_lines = 0
                 if lines is not None:
-                    for line in lines[:, 0]:
-                        x1, y1, x2, y2 = [int(v) for v in line]
+                    for line in lines:
+                        x1, y1, x2, y2 = [int(v) for v in line[0]]
                         length = float(np.hypot(x2 - x1, y2 - y1))
                         if length >= min(central.shape) * 0.25:
                             long_lines += 1
