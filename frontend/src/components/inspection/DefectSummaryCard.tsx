@@ -33,7 +33,20 @@ export const DefectSummaryCard: React.FC<DefectSummaryCardProps> = ({ inspection
         <Badge status={inspection.status} />
       </div>
 
-      {inspection.status === 'DEFECTIVE' && primaryDefect ? (
+      {inspection.status === 'NOT_ANALYZABLE' ? (
+        <div style={{ padding: '1.5rem', textAlign: 'center', backgroundColor: '#2C2417', border: '1px solid #D99A2B', borderRadius: '4px' }}>
+          <AlertOctagon style={{ width: '36px', height: '36px', color: '#D99A2B', margin: '0 auto 0.5rem auto' }} />
+          <span style={{ display: 'block', fontWeight: 700, color: '#F3C969', fontSize: '1rem' }}>
+            ANALYSIS NOT AVAILABLE
+          </span>
+          <span style={{ fontSize: '0.8rem', color: '#B9B0A0', display: 'block', marginTop: '0.35rem' }}>
+            This image did not provide enough usable product/component evidence for inspection.
+          </span>
+          <span style={{ fontSize: '0.72rem', color: '#8D8372', display: 'block', marginTop: '0.5rem' }}>
+            Defect classification, confidence, root cause, and risk are intentionally not reported.
+          </span>
+        </div>
+      ) : inspection.status === 'DEFECTIVE' && primaryDefect ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             <div style={{ backgroundColor: '#162235', padding: '0.6rem 0.8rem', borderRadius: '4px' }}>
