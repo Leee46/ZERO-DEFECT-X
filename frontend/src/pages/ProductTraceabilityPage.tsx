@@ -96,7 +96,7 @@ export const ProductTraceabilityPage: React.FC<ProductTraceabilityPageProps> = (
           MANUFACTURING & QUALITY TIMELINE STEPS
         </span>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', position: 'relative', paddingLeft: '1.5rem', borderLeft: '2px stroke #26364A' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', position: 'relative', paddingLeft: '1.5rem', borderLeft: '2px solid #26364A' }}>
           {record.timeline.map((step) => {
             const isWarn = step.status === 'WARNING';
             const isComp = step.status === 'COMPLETED';
