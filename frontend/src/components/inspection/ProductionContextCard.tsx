@@ -11,6 +11,8 @@ export const ProductionContextCard: React.FC<ProductionContextCardProps> = ({ in
   const p = inspection.parameters || {};
   const formatNumber = (value: unknown, decimals = 1) =>
     typeof value === 'number' && Number.isFinite(value) ? value.toFixed(decimals) : 'N/A';
+  const temperature = typeof p.temperature === 'number' ? p.temperature : null;
+  const vibration = typeof p.vibration === 'number' ? p.vibration : null;
 
   const isOffline = inspection.factory_status === 'Virtual Factory Offline' || inspection.factory_source_label === 'OFFLINE';
   const sourceLabel = inspection.factory_source_label || (isOffline ? 'Virtual Factory Offline' : 'SIMULATED FACTORY DATA');
@@ -83,20 +85,20 @@ export const ProductionContextCard: React.FC<ProductionContextCardProps> = ({ in
         {/* Temperature */}
         <div
           style={{
-            backgroundColor: p.temperature > 70 ? 'rgba(217, 154, 43, 0.1)' : '#162235',
-            border: `1px solid ${p.temperature > 70 ? '#D99A2B' : '#26364A'}`,
+            backgroundColor: temperature !== null && temperature > 70 ? 'rgba(217, 154, 43, 0.1)' : '#162235',
+            border: `1px solid ${temperature !== null && temperature > 70 ? '#D99A2B' : '#26364A'}`,
             padding: '0.65rem 0.8rem',
             borderRadius: '4px'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#8D9AAA', fontSize: '0.75rem' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-              <Thermometer size={14} style={{ color: p.temperature > 70 ? '#D99A2B' : '#4F7CAC' }} />
+              <Thermometer size={14} style={{ color: temperature !== null && temperature > 70 ? '#D99A2B' : '#4F7CAC' }} />
               MACHINE TEMP
             </span>
-            {p.temperature > 70 && <span style={{ color: '#D99A2B', fontWeight: 600 }}>ELEVATED</span>}
+            {temperature !== null && temperature > 70 && <span style={{ color: '#D99A2B', fontWeight: 600 }}>ELEVATED</span>}
           </div>
-          <span style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: p.temperature > 70 ? '#D99A2B' : '#E8EDF3' }}>
+          <span style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: temperature !== null && temperature > 70 ? '#D99A2B' : '#E8EDF3' }}>
             {formatNumber(p.temperature)}°C
           </span>
         </div>
@@ -104,20 +106,20 @@ export const ProductionContextCard: React.FC<ProductionContextCardProps> = ({ in
         {/* Vibration */}
         <div
           style={{
-            backgroundColor: p.vibration > 3.0 ? 'rgba(229, 83, 83, 0.12)' : '#162235',
-            border: `1px solid ${p.vibration > 3.0 ? '#E55353' : '#26364A'}`,
+            backgroundColor: vibration !== null && vibration > 3.0 ? 'rgba(229, 83, 83, 0.12)' : '#162235',
+            border: `1px solid ${vibration !== null && vibration > 3.0 ? '#E55353' : '#26364A'}`,
             padding: '0.65rem 0.8rem',
             borderRadius: '4px'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#8D9AAA', fontSize: '0.75rem' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-              <Activity size={14} style={{ color: p.vibration > 3.0 ? '#E55353' : '#4F7CAC' }} />
+              <Activity size={14} style={{ color: vibration !== null && vibration > 3.0 ? '#E55353' : '#4F7CAC' }} />
               VIBRATION
             </span>
-            {p.vibration > 3.0 && <span style={{ color: '#E55353', fontWeight: 600 }}>ANOMALY</span>}
+            {vibration !== null && vibration > 3.0 && <span style={{ color: '#E55353', fontWeight: 600 }}>ANOMALY</span>}
           </div>
-          <span style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: p.vibration > 3.0 ? '#E55353' : '#E8EDF3' }}>
+          <span style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: vibration !== null && vibration > 3.0 ? '#E55353' : '#E8EDF3' }}>
             {formatNumber(p.vibration)} mm/s
           </span>
         </div>
