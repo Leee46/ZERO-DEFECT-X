@@ -54,7 +54,7 @@ export const ProductTraceabilityPage: React.FC<ProductTraceabilityPageProps> = (
             <GitPullRequest className="w-4 h-4 text-system-blue" />
             <span className="scada-title">PRODUCT TRACEABILITY: {record.productId}</span>
           </div>
-          <Badge status="VERIFIED OK" />
+          <Badge status={record.overallStatus || "NO VERIFICATION"} />
         </div>
 
         {/* Product Metadata Summary Grid */}
