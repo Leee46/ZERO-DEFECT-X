@@ -16,7 +16,7 @@ export const Badge: React.FC<BadgeProps> = ({ status, showDot = true }) => {
   if (['SAFE', 'NORMAL', 'PASS', 'LOW', 'RESOLVED', 'VERIFIED', 'IMPROVED'].includes(statusUpper)) {
     badgeClass = 'scada-badge-safe';
     dotClass = 'status-dot-safe';
-  } else if (['WARNING', 'MEDIUM', 'ACKNOWLEDGED', 'IN_PROGRESS', 'FLAGGED'].includes(statusUpper)) {
+  } else if (['WARNING', 'MEDIUM', 'ACKNOWLEDGED', 'IN_PROGRESS', 'FLAGGED', 'NOT_ANALYZABLE'].includes(statusUpper)) {
     badgeClass = 'scada-badge-warning';
     dotClass = 'status-dot-warning';
   } else if (['CRITICAL', 'HIGH', 'DEFECTIVE', 'FAULT', 'UNRESOLVED'].includes(statusUpper)) {
