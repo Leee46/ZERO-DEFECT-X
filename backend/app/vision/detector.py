@@ -149,8 +149,11 @@ class OpenCVDetector:
             return []
 
         candidates = []
-        for line in lines[:, 0, :]:
-            x1, y1, x2, y2 = [int(v) for v in line]
+        for line in lines:
+            coords = np.asarray(line).reshape(-1)
+            if coords.size != 4:
+                continue
+            x1, y1, x2, y2 = [int(v) for v in coords]
             dx, dy = x2 - x1, y2 - y1
             length = float(np.hypot(dx, dy))
             if length < min_line_length or length > max_line_length:
