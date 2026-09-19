@@ -21,7 +21,8 @@ export const VisionViewer: React.FC<VisionViewerProps> = ({
   modelProvider = 'OpenCV Anomaly Detector (Development-stage computer vision)',
   confidence = 84
 }) => {
-  const [showAnnotated, setShowAnnotated] = useState<boolean>(true);
+  const [showAnnotated, setShowAnnotated] = useState<boolean>(false);
+  const [imageError, setImageError] = useState<boolean>(false);
   const [showBoxes, setShowBoxes] = useState<boolean>(true);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
 
@@ -36,7 +37,33 @@ export const VisionViewer: React.FC<VisionViewerProps> = ({
     return url;
   };
 
-  const activeSrc = (showAnnotated && annotatedImageUrl) ? resolveUrl(annotatedImageUrl) : resolveUrl(imageUrl);
+  const rawSrc = resolveUrl(imageUrl);
+  const requestedSrc = (showAnnotated && annotatedImageUrl) ? resolveUrl(annotatedImageUrl) : rawSrc;
+  const activeSrc = imageError ? rawSrc : requestedSrc;
+
+  const getOverlayBox = (defect: any) => {
+    if (defect?.boundingBox && Number.isFinite(defect.boundingBox.x)) {
+      return {
+        left: (defect.boundingBox.x / 800) * 100,
+        top: (defect.boundingBox.y / 600) * 100,
+        width: (defect.boundingBox.width / 800) * 100,
+        height: (defect.boundingBox.height / 600) * 100,
+        label: defect.boundingBox.label || defect.type || defect.defect_type || 'DEFECT'
+      };
+    }
+
+    if (defect?.x_min != null && defect?.y_min != null && defect?.x_max != null && defect?.y_max != null) {
+      return {
+        left: Number(defect.x_min) * 100,
+        top: Number(defect.y_min) * 100,
+        width: Math.max(0, Number(defect.x_max) - Number(defect.x_min)) * 100,
+        height: Math.max(0, Number(defect.y_max) - Number(defect.y_min)) * 100,
+        label: defect.defect_type || defect.type || 'DEFECT'
+      };
+    }
+
+    return null;
+  };
 
   return (
     <div className="scada-card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -69,7 +96,7 @@ export const VisionViewer: React.FC<VisionViewerProps> = ({
           {annotatedImageUrl && (
             <button
               className={`scada-btn scada-btn-sm ${showAnnotated ? 'scada-btn-primary' : 'scada-btn-secondary'}`}
-              onClick={() => setShowAnnotated(!showAnnotated)}
+              onClick={() => { setImageError(false); setShowAnnotated(!showAnnotated); }}
             >
               <Eye size={14} />
               {showAnnotated ? 'Annotated OpenCV Image' : 'Original Raw Product'}
@@ -118,7 +145,8 @@ export const VisionViewer: React.FC<VisionViewerProps> = ({
         >
           <img
             src={activeSrc}
-            alt="Inspected Real Metal Ring Surface"
+            alt="Uploaded manufacturing component inspection image"
+            onError={() => setImageError(true)}
             style={{
               display: 'block',
               maxWidth: '100%',
@@ -130,8 +158,9 @@ export const VisionViewer: React.FC<VisionViewerProps> = ({
 
           {/* Render CSS Bounding Box Overlay if raw image is active */}
           {!showAnnotated && showBoxes &&
-            defects.map((defect, idx) => {
-              const { x, y, width, height, label } = defect.boundingBox || { x: 420, y: 80, width: 190, height: 130, label: defect.type };
+            defects.map((defect: any, idx) => {
+              const box = getOverlayBox(defect);
+              if (!box) return null;
               const isCrit = defect.severity === 'CRITICAL' || defect.severity === 'HIGH';
               const boxColor = isCrit ? '#E55353' : '#D99A2B';
               return (
@@ -139,10 +168,10 @@ export const VisionViewer: React.FC<VisionViewerProps> = ({
                   key={defect.id || idx}
                   style={{
                     position: 'absolute',
-                    left: `${(x / 800) * 100}%`,
-                    top: `${(y / 600) * 100}%`,
-                    width: `${(width / 800) * 100}%`,
-                    height: `${(height / 600) * 100}%`,
+                    left: `${box.left}%`,
+                    top: `${box.top}%`,
+                    width: `${box.width}%`,
+                    height: `${box.height}%`,
                     border: `2px solid ${boxColor}`,
                     backgroundColor: `${boxColor}22`,
                     borderRadius: '2px',
@@ -165,7 +194,7 @@ export const VisionViewer: React.FC<VisionViewerProps> = ({
                       whiteSpace: 'nowrap'
                     }}
                   >
-                    {label || `${defect.type}`}
+                    {box.label}
                   </span>
                 </div>
               );
