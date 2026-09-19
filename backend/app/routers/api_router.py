@@ -115,10 +115,10 @@ async def analyze_uploaded_image(
             urls_to_try.append(f"{base_url}/api/factory/telemetry")
 
     urls_to_try.extend([
-        "http://127.0.0.1:8000/api/telemetry",
+        "http://127.0.0.1:8001/api/telemetry",
         "http://127.0.0.1:8000/api/factory/telemetry",
         "http://127.0.0.1:8000/api/telemetry",
-        "http://localhost:8000/api/telemetry"
+        "http://localhost:8001/api/telemetry"
     ])
 
     # Remove duplicates preserving order
@@ -985,8 +985,9 @@ def get_system_network_info():
 # 16. Live Laptop 2 Telemetry & Connection Status Proxy
 @router.get("/factory/status")
 @router.get("/factory/telemetry")
+@router.get("/telemetry")
 def get_live_factory_telemetry(machine_id: str = "M03", product_id: str = "RING-001", batch_id: str = "B1042"):
-    raw_env_url = os.environ.get("LAPTOP2_URL", "http://10.10.56.118:8000").strip()
+    raw_env_url = os.environ.get("LAPTOP2_URL", "http://127.0.0.1:8001").strip()
     urls_to_try = []
 
     if raw_env_url:
@@ -1003,8 +1004,8 @@ def get_live_factory_telemetry(machine_id: str = "M03", product_id: str = "RING-
             urls_to_try.append(f"{base_url}/api/factory/telemetry")
 
     urls_to_try.extend([
-        "http://10.10.56.118:8000/api/telemetry",
-        "http://10.10.56.118:8000/api/factory/telemetry",
+        "http://127.0.0.1:8001/api/telemetry",
+        "http://127.0.0.1:8001/api/factory/telemetry",
         "http://127.0.0.1:8000/api/telemetry",
         "http://localhost:8000/api/telemetry"
     ])
@@ -1022,12 +1023,12 @@ def get_live_factory_telemetry(machine_id: str = "M03", product_id: str = "RING-
                 if resp.status == 200:
                     data = json.loads(resp.read().decode())
 
-                    vib = data.get("vibration_mm_s") if data.get("vibration_mm_s") is not None else (data.get("telemetry", {}).get("vibration") if isinstance(data.get("telemetry"), dict) else data.get("vibration", 2.7))
-                    temp = data.get("temperature_c") if data.get("temperature_c") is not None else (data.get("telemetry", {}).get("temperature") if isinstance(data.get("telemetry"), dict) else data.get("temperature", 65.0))
-                    press = data.get("pressure_bar") if data.get("pressure_bar") is not None else (data.get("telemetry", {}).get("pressure") if isinstance(data.get("telemetry"), dict) else data.get("pressure", 6.0))
-                    rpm = data.get("spindle_rpm") if data.get("spindle_rpm") is not None else (data.get("telemetry", {}).get("speed") if isinstance(data.get("telemetry"), dict) else data.get("speed", 1500))
-                    env_t = data.get("environment_temp_c") if data.get("environment_temp_c") is not None else (data.get("environment", {}).get("temperature") if isinstance(data.get("environment"), dict) else data.get("env_temp", 29.0))
-                    env_h = data.get("humidity_pct") if data.get("humidity_pct") is not None else (data.get("environment", {}).get("humidity") if isinstance(data.get("environment"), dict) else data.get("humidity", 68.0))
+                    vib = data.get("vibration_mm_s") if data.get("vibration_mm_s") is not None else (data.get("telemetry", {}).get("vibration") if isinstance(data.get("telemetry"), dict) else data.get("vibration"))
+                    temp = data.get("temperature_c") if data.get("temperature_c") is not None else (data.get("telemetry", {}).get("temperature") if isinstance(data.get("telemetry"), dict) else data.get("temperature"))
+                    press = data.get("pressure_bar") if data.get("pressure_bar") is not None else (data.get("telemetry", {}).get("pressure") if isinstance(data.get("telemetry"), dict) else data.get("pressure"))
+                    rpm = data.get("spindle_rpm") if data.get("spindle_rpm") is not None else (data.get("telemetry", {}).get("speed") if isinstance(data.get("telemetry"), dict) else data.get("speed"))
+                    env_t = data.get("environment_temp_c") if data.get("environment_temp_c") is not None else (data.get("environment", {}).get("temperature") if isinstance(data.get("environment"), dict) else data.get("env_temp"))
+                    env_h = data.get("humidity_pct") if data.get("humidity_pct") is not None else (data.get("environment", {}).get("humidity") if isinstance(data.get("environment"), dict) else data.get("humidity"))
 
                     return {
                         "connection_status": "CONNECTED",
@@ -1039,15 +1040,15 @@ def get_live_factory_telemetry(machine_id: str = "M03", product_id: str = "RING-
                         "product_id": data.get("product_id", product_id),
                         "batch_id": data.get("batch_id", batch_id),
                         "operator_shift": data.get("operator_shift", "Shift B"),
-                        "vibration_mm_s": float(vib if vib is not None else 2.7),
-                        "temperature_c": float(temp if temp is not None else 65.0),
-                        "pressure_bar": float(press if press is not None else 6.0),
-                        "spindle_rpm": int(rpm if rpm is not None else 1500),
-                        "environment_temp_c": float(env_t if env_t is not None else 29.0),
-                        "humidity_pct": float(env_h if env_h is not None else 68.0),
+                        "vibration_mm_s": float(vib) if vib is not None else None,
+                        "temperature_c": float(temp) if temp is not None else None,
+                        "pressure_bar": float(press) if press is not None else None,
+                        "spindle_rpm": int(rpm) if rpm is not None else None,
+                        "environment_temp_c": float(env_t) if env_t is not None else None,
+                        "humidity_pct": float(env_h) if env_h is not None else None,
                         "machine_status": data.get("machine_status", "NORMAL"),
                         "production_status": data.get("production_status", "RUNNING"),
-                        "timestamp": data.get("timestamp", datetime.datetime.utcnow().isoformat())
+                        "timestamp": data.get("timestamp")
                     }
         except Exception:
             pass
