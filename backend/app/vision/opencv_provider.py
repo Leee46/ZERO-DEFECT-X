@@ -39,25 +39,50 @@ class OpenCVVisionProvider(VisionProvider):
             if focus_score < 12.0:
                 raise ValueError("IMAGE_NOT_ANALYZABLE: Image is too blurred for reliable inspection.")
 
+            # Build the relevance mask in both polarities. Dark machined parts on a
+            # light background and light parts on a dark background are both valid.
+            # The previous single-polarity mask could mistake the background for the
+            # foreground and then reject an otherwise clear component.
             normalized = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
-            _, binary = cv2.threshold(normalized, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            _, binary_dark = cv2.threshold(normalized, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            binary_light = cv2.bitwise_not(binary_dark)
+
             kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
-            binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel, iterations=2)
-            binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel, iterations=1)
-            contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            masks = []
+            for mask in (binary_dark, binary_light):
+                mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=2)
+                mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=1)
+                masks.append(mask)
+
             image_area = float(w * h)
             largest_object_ratio = 0.0
-            for cnt in contours:
-                area = cv2.contourArea(cnt)
-                if area < image_area * 0.015:
-                    continue
-                x, y, cw, ch = cv2.boundingRect(cnt)
-                margin_x = max(5, int(w * 0.02))
-                margin_y = max(5, int(h * 0.02))
-                if x <= margin_x or y <= margin_y or x + cw >= w - margin_x or y + ch >= h - margin_y:
-                    continue
-                largest_object_ratio = max(largest_object_ratio, area / image_area)
-            if largest_object_ratio < 0.03:
+
+            # A component is considered relevant when a sizable foreground region is
+            # present. Boundary-touching contours are ignored because they are usually
+            # the photo/background frame rather than the component itself.
+            # Use a 5% minimum so ordinary UI/text fragments are not treated as products.
+            for mask in masks:
+                contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                for cnt in contours:
+                    area = cv2.contourArea(cnt)
+                    if area < image_area * 0.015 or area > image_area * 0.90:
+                        continue
+
+                    x, y, cw, ch = cv2.boundingRect(cnt)
+                    margin_x = max(5, int(w * 0.02))
+                    margin_y = max(5, int(h * 0.02))
+                    touches_frame = (
+                        x <= margin_x or
+                        y <= margin_y or
+                        x + cw >= w - margin_x or
+                        y + ch >= h - margin_y
+                    )
+                    if touches_frame:
+                        continue
+
+                    largest_object_ratio = max(largest_object_ratio, area / image_area)
+
+            if largest_object_ratio < 0.05:
                 raise ValueError("IMAGE_NOT_ANALYZABLE: No clear foreground product/component was found. Upload a close, well-framed manufacturing component image.")
 
             # 3. Preprocess
