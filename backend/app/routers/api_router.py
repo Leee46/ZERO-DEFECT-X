@@ -98,7 +98,7 @@ async def analyze_uploaded_image(
     telemetry_data = None
     environment_data = None
 
-    raw_env_url = os.environ.get("LAPTOP2_URL", "http://127.0.0.1:8000").strip()
+    raw_env_url = os.environ.get("LAPTOP2_URL", "http://127.0.0.1:8001").strip()
     urls_to_try = []
 
     if raw_env_url:
@@ -134,46 +134,50 @@ async def analyze_uploaded_image(
             with opener.open(req, timeout=2.0) as resp:
                 if resp.status == 200:
                     data = json.loads(resp.read().decode())
+                    payload = data.get("data") if isinstance(data.get("data"), dict) else data
                     factory_telemetry = data
                     factory_status = "ONLINE"
-                    factory_source_label = data.get("source_label", "SIMULATED FACTORY DATA")
+                    factory_source_label = payload.get("source_label", data.get("source_label", "SIMULATED FACTORY DATA"))
 
-                    if "telemetry" in data and isinstance(data["telemetry"], dict):
-                        telemetry_data = data["telemetry"]
-                    elif "temperature" in data or "vibration" in data:
+                    if "telemetry" in payload and isinstance(payload["telemetry"], dict):
+                        telemetry_data = payload["telemetry"]
+                    elif any(k in payload for k in ("temperature", "temperature_c", "vibration", "vibration_mm_s")):
                         telemetry_data = {
-                            "temperature": data.get("temperature"),
-                            "vibration": data.get("vibration"),
-                            "pressure": data.get("pressure"),
-                            "speed": data.get("speed"),
-                            "status": data.get("status", "UNKNOWN")
+                            "temperature": payload.get("temperature", payload.get("temperature_c")),
+                            "vibration": payload.get("vibration", payload.get("vibration_mm_s")),
+                            "pressure": payload.get("pressure", payload.get("pressure_bar")),
+                            "speed": payload.get("speed", payload.get("spindle_rpm")),
+                            "status": payload.get("status", payload.get("machine_status", "UNKNOWN"))
                         }
 
-                    if "environment" in data and isinstance(data["environment"], dict):
-                        environment_data = data["environment"]
+                    if "environment" in payload and isinstance(payload["environment"], dict):
+                        environment_data = payload["environment"]
                     else:
                         environment_data = {
-                            "temperature": data.get("env_temp", data.get("environment_temperature")),
-                            "humidity": data.get("env_humidity", data.get("humidity"))
+                            "temperature": payload.get("env_temp", payload.get("environment_temperature", payload.get("environment_temp_c"))),
+                            "humidity": payload.get("env_humidity", payload.get("humidity", payload.get("humidity_pct")))
                         }
 
                     # Persist telemetry in MachineParameter table
-                    new_param = MachineParameter(
-                        machine_id=machine_id,
-                        timestamp=now,
-                        temperature=float(telemetry_data["temperature"]),
-                        vibration=float(telemetry_data["vibration"]),
-                        pressure=float(telemetry_data["pressure"]),
-                        speed=int(telemetry_data["speed"])
-                    )
-                    db.add(new_param)
+                    required_telemetry = ("temperature", "vibration", "pressure", "speed")
+                    required_environment = ("temperature", "humidity")
+                    if telemetry_data and all(telemetry_data.get(k) is not None for k in required_telemetry) and environment_data and all(environment_data.get(k) is not None for k in required_environment):
+                        new_param = MachineParameter(
+                            machine_id=machine_id,
+                            timestamp=now,
+                            temperature=float(telemetry_data["temperature"]),
+                            vibration=float(telemetry_data["vibration"]),
+                            pressure=float(telemetry_data["pressure"]),
+                            speed=int(telemetry_data["speed"])
+                        )
+                        db.add(new_param)
 
-                    new_env = EnvironmentReading(
-                        timestamp=now,
-                        temperature=float(environment_data["temperature"]),
-                        humidity=float(environment_data["humidity"])
-                    )
-                    db.add(new_env)
+                        new_env = EnvironmentReading(
+                            timestamp=now,
+                            temperature=float(environment_data["temperature"]),
+                            humidity=float(environment_data["humidity"])
+                        )
+                        db.add(new_env)
                     db.flush()
                     break
         except Exception as err:
