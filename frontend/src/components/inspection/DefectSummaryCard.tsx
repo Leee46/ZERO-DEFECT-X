@@ -10,7 +10,7 @@ interface DefectSummaryCardProps {
 export const DefectSummaryCard: React.FC<DefectSummaryCardProps> = ({ inspection }) => {
   const primaryDefect = inspection.defects?.[0] || null;
 
-  const rootCauseFactor = inspection.root_cause?.probable_factor || 'Elevated Machine Vibration';
+  const rootCauseFactor = inspection.root_cause?.probable_factor || 'Pending telemetry correlation';
   const requiresVerification = inspection.root_cause?.verification_required ?? true;
 
   return (
