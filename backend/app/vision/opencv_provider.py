@@ -26,10 +26,43 @@ class OpenCVVisionProvider(VisionProvider):
             raw_bgr, orig_dim = Preprocessor.validate_and_load(image_path)
             orig_w, orig_h = orig_dim
 
-            # 2. Preprocess
+            # 2. Basic image-quality / relevance gate before defect detection.
+            gray = cv2.cvtColor(raw_bgr, cv2.COLOR_BGR2GRAY)
+            h, w = gray.shape[:2]
+            if min(h, w) < 128:
+                raise ValueError("IMAGE_NOT_ANALYZABLE: Image resolution is too low for component inspection.")
+            gray_std = float(np.std(gray))
+            if gray_std < 8.0:
+                raise ValueError("IMAGE_NOT_ANALYZABLE: Image is nearly uniform or blank.")
+            focus_score = float(cv2.Laplacian(gray, cv2.CV_64F).var())
+            if focus_score < 12.0:
+                raise ValueError("IMAGE_NOT_ANALYZABLE: Image is too blurred for reliable inspection.")
+
+            normalized = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
+            _, binary = cv2.threshold(normalized, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+            binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel, iterations=2)
+            binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel, iterations=1)
+            contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            image_area = float(w * h)
+            largest_object_ratio = 0.0
+            for cnt in contours:
+                area = cv2.contourArea(cnt)
+                if area < image_area * 0.015:
+                    continue
+                x, y, cw, ch = cv2.boundingRect(cnt)
+                margin_x = max(5, int(w * 0.02))
+                margin_y = max(5, int(h * 0.02))
+                if x <= margin_x or y <= margin_y or x + cw >= w - margin_x or y + ch >= h - margin_y:
+                    continue
+                largest_object_ratio = max(largest_object_ratio, area / image_area)
+            if largest_object_ratio < 0.03:
+                raise ValueError("IMAGE_NOT_ANALYZABLE: No clear foreground product/component was found. Upload a close, well-framed manufacturing component image.")
+
+            # 3. Preprocess
             resized_bgr, blurred_gray, scale = Preprocessor.preprocess_for_detection(raw_bgr)
 
-            # 3. Detect Anomalies & Calculate Bounding Boxes
+            # 4. Detect visual surface anomalies.
             raw_anomalies = OpenCVDetector.detect_anomalies(resized_bgr, blurred_gray, orig_dim, scale)
 
             defects = []
@@ -97,6 +130,28 @@ class OpenCVVisionProvider(VisionProvider):
                 "disclaimer": "DEVELOPMENT COMPUTER VISION: Detection score represents OpenCV surface anomaly gradient metric. ML model classification required for production deployment."
             }
 
+        except ValueError as e:
+            message = str(e)
+            if message.startswith("IMAGE_NOT_ANALYZABLE:"):
+                reason = message.split(":", 1)[1].strip()
+                return {
+                    "inspection_id": insp_id,
+                    "engine": engine_name,
+                    "engine_type": "DEVELOPMENT_OPENCV",
+                    "status": "NOT_ANALYZABLE",
+                    "overall_confidence": 0.0,
+                    "anomaly_score": 0.0,
+                    "severity": "LOW",
+                    "severity_reason": reason,
+                    "location": "N/A",
+                    "defects": [],
+                    "annotated_image_url": None,
+                    "is_demo_result": False,
+                    "not_analyzable_reason": reason,
+                    "disclaimer": "IMAGE RELEVANCE GATE: The upload did not contain a sufficiently clear, inspectable product/component image."
+                }
+            print(f"[OpenCVVisionProvider Error] {e}")
+            raise
         except Exception as e:
             print(f"[OpenCVVisionProvider Error] {e}")
             raise ValueError(f"Vision processing failed: {str(e)}")
