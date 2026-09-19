@@ -38,7 +38,7 @@ class InspectionService {
             machineId: item.machine_id || item.machineId || 'Unknown',
             shift: item.shift_id || item.shift || 'Unknown',
             timestamp: item.inspection_time ? item.inspection_time.replace('T', ' ').substring(0, 19) : (item.timestamp || 'Unknown'),
-            status: item.status === 'DEFECTIVE' ? 'DEFECTIVE' : 'PASS',
+            status: item.status === 'NOT_ANALYZABLE' ? 'NOT_ANALYZABLE' : item.status === 'DEFECTIVE' ? 'DEFECTIVE' : 'PASS',
             defects: defects,
             imageUrl: rawUrl,
             imageThumbnail: rawUrl,
