@@ -42,6 +42,8 @@ def run_tests():
     path_a = os.path.join("static", "demo_images", "scratch_component.jpg")
     res_a = upload_image_test(path_a, "M03")
     print("\n[TEST A] Development Scratch Component:")
+    assert res_a["status"] == "DEFECTIVE", f"Scratch test returned {res_a['status']}"
+    assert res_a.get("defects"), "Scratch test returned no defect"
     print(f"  - Status: {res_a['status']} (Expected: DEFECTIVE)")
     print(f"  - Defect Type: {res_a['defects'][0]['defect_type'] if res_a['defects'] else 'None'}")
     print(f"  - Bounding Box: {res_a['defects'][0]['bounding_box'] if res_a['defects'] else 'N/A'}")
@@ -51,6 +53,8 @@ def run_tests():
     path_b = os.path.join("static", "demo_images", "surface_defect_component.jpg")
     res_b = upload_image_test(path_b, "M03")
     print("\n[TEST B] Development Surface Defect:")
+    assert res_b["status"] == "DEFECTIVE", f"Surface defect test returned {res_b['status']}"
+    assert res_b.get("defects"), "Surface defect test returned no defect"
     print(f"  - Status: {res_b['status']} (Expected: DEFECTIVE)")
     print(f"  - Location: {res_b['location']}")
     print(f"  - Severity: {res_b['severity']}")
@@ -60,6 +64,8 @@ def run_tests():
     path_c = os.path.join("static", "demo_images", "normal_component.jpg")
     res_c = upload_image_test(path_c, "M01")
     print("\n[TEST C] Development Normal Component:")
+    assert res_c["status"] == "PASSED", f"Normal component test returned {res_c['status']}"
+    assert len(res_c.get("defects", [])) == 0, "Normal component returned a defect"
     print(f"  - Status: {res_c['status']} (Expected: PASSED)")
     print(f"  - Defects Count: {len(res_c['defects'])} (Expected: 0)")
     print(f"  - DB Inspection ID: {res_c['inspection_id']}")
@@ -76,6 +82,7 @@ def run_tests():
     print(f"  - Total Database Inspection Records: {len(history)}")
     created_ids = {res_a['inspection_id'], res_b['inspection_id'], res_c['inspection_id']}
     found_in_history = [i['id'] for i in history if i['id'] in created_ids]
+    assert len(found_in_history) == 3, f"Only {len(found_in_history)}/3 new inspections were found in history"
     print(f"  - Newly Created Inspections Found in DB API: {len(found_in_history)} / 3 ({found_in_history})")
 
     # TEST F: Saved Inspection Traceability & Production Context Linkage
