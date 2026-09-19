@@ -498,7 +498,7 @@ def get_products(db: Session = Depends(get_db)):
 # 7. Inspections API
 @router.get("/inspections", response_model=List[InspectionOut])
 def get_inspections(db: Session = Depends(get_db)):
-    return db.query(Inspection).all()
+    return db.query(Inspection).order_by(Inspection.inspection_time.desc()).all()
 
 
 @router.get("/inspections/{inspection_id}", response_model=InspectionOut)
@@ -510,54 +510,20 @@ def get_inspection(inspection_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/inspections", response_model=InspectionOut)
-def create_inspection(
+def create_inspection_legacy(
     payload: InspectionCreate,
-    db: Session = Depends(get_db),
-    vision: VisionProvider = Depends(get_vision_provider)
+    db: Session = Depends(get_db)
 ):
-    insp_id = f"INSP-2026-{uuid.uuid4().hex[:4].upper()}"
-    
-    # Process image with DemoVisionProvider
-    vision_result = vision.analyze_image(
-        image_path=payload.image_path or "/images/sample.jpg",
-        machine_id=payload.machine_id
+    """
+    Legacy JSON endpoint retained for API compatibility.
+    Production inspections must use multipart /api/vision/analyze so the actual
+    product image is uploaded and analyzed. This endpoint never fabricates a
+    result from a placeholder image.
+    """
+    raise HTTPException(
+        status_code=400,
+        detail="Legacy JSON inspection creation is disabled. Upload the real product image to POST /api/vision/analyze."
     )
-
-    new_insp = Inspection(
-        id=insp_id,
-        product_id=payload.product_id,
-        batch_id=payload.batch_id,
-        machine_id=payload.machine_id,
-        shift_id=payload.shift_id,
-        image_path=payload.image_path,
-        inspection_time=datetime.datetime.now(datetime.timezone.utc),
-        status=vision_result["status"],
-        overall_confidence=vision_result["overall_confidence"]
-    )
-    db.add(new_insp)
-    db.flush()
-
-    # Save defects if any returned by vision provider
-    for item in vision_result.get("defects", []):
-        d_id = f"DEF-2026-{uuid.uuid4().hex[:4].upper()}"
-        defect = Defect(
-            id=d_id,
-            inspection_id=insp_id,
-            defect_type=item["defect_type"],
-            confidence=item["confidence"],
-            severity=item["severity"],
-            location=item["location"],
-            x_min=item.get("x_min"),
-            y_min=item.get("y_min"),
-            x_max=item.get("x_max"),
-            y_max=item.get("y_max")
-        )
-        db.add(defect)
-
-    db.commit()
-    db.refresh(new_insp)
-    return new_insp
-
 
 # 8. Product Traceability API
 @router.get("/traceability/{inspection_id}")
