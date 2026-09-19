@@ -110,6 +110,13 @@ export const ReinspectionPage: React.FC<ReinspectionPageProps> = ({ onNavigate, 
 
       <DemoBanner message="PHASE 6: REINSPECTION, VERIFICATION & PRODUCTION FEEDBACK LOOP (SI-03)" />
 
+      {error && (
+        <div className="scada-card" style={{ borderLeft: '4px solid #E55353' }}>
+          <span className="scada-label" style={{ color: '#E55353' }}>REINSPECTION ERROR</span>
+          <p style={{ color: '#8D9AAA', marginBottom: 0 }}>{error}</p>
+        </div>
+      )}
+
       {/* Top Grid: Reinspection Launch & Image Analysis */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '1.25rem' }}>
         {/* Left: Reinspection Input & Trigger */}
@@ -177,13 +184,6 @@ export const ReinspectionPage: React.FC<ReinspectionPageProps> = ({ onNavigate, 
 
         {/* Right: Verification Engine & Closed Loop Result */}
         {reinspectionResult && (
-          {error && (
-            <div className="scada-card" style={{ borderLeft: '4px solid #E55353', marginBottom: '1.25rem' }}>
-              <span className="scada-label" style={{ color: '#E55353' }}>REINSPECTION ERROR</span>
-              <p style={{ color: '#8D9AAA', marginBottom: 0 }}>{error}</p>
-            </div>
-          )}
-
           <div className="scada-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div>
               <div className="scada-header" style={{ display: 'flex', justifyContent: 'space-between' }}>
