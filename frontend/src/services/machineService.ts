@@ -8,7 +8,7 @@ class MachineService {
     try {
       const data = await apiClient.get<any[]>('/machines');
       if (Array.isArray(data) && data.length > 0) {
-        return data.map((m) => {
+        const rows = data.map((m) => {
           const riskScore = Number(m.risk_score ?? 0);
           const riskLevel: SeverityLevel =
             riskScore >= 75 ? 'CRITICAL' :
@@ -40,7 +40,9 @@ class MachineService {
             recentAlerts: Number(m.recent_alerts ?? 0),
             historicalTrend: Array.isArray(m.historical_trend) ? m.historical_trend : []
           };
-        })
+        });
+        this.machines = rows;
+        return rows;
       }
     } catch (err) {
       console.warn('Backend machine API unavailable; no synthetic machine records will be substituted.');
