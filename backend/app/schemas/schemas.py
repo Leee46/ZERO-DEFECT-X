@@ -260,7 +260,7 @@ class ReinspectionOut(BaseModel):
     image_path: Optional[str] = None
     reinspection_time: Optional[datetime] = None
     status: str
-    overall_confidence: Optional[float] = 0.95
+    overall_confidence: Optional[float] = None
     defect_detected: bool
     defects: Optional[List[Dict[str, Any]]] = None
     verification_status: Optional[str] = "PENDING"
