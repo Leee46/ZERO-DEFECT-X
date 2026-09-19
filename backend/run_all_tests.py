@@ -8,6 +8,9 @@ def main():
     print("  ZERO-DEFECT X — AUTOMATED END-TO-END SUITE RUNNER")
     print("=" * 60)
 
+    env = os.environ.copy()
+    env["LAPTOP2_URL"] = "http://127.0.0.1:8001"
+
     # 1. Start Virtual Factory Simulator on port 8001
     sim_proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "simulator.virtual_factory_server:app", "--host", "127.0.0.1", "--port", "8001"],
@@ -17,11 +20,9 @@ def main():
     # 2. Start ZERO-DEFECT X Backend on port 8000
     backend_proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000"],
-        cwd=os.path.dirname(os.path.abspath(__file__))
+        cwd=os.path.dirname(os.path.abspath(__file__)),
+        env=env
     )
-
-    env = os.environ.copy()
-    env["LAPTOP2_URL"] = "http://127.0.0.1:8001"
 
     time.sleep(3)
 
