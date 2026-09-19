@@ -104,5 +104,118 @@ class OpenCVDetector:
                 "contrast_score": round(contrast_score, 3),
             })
 
+        # Secondary scratch/crack pass. The primary Canny contour detector can miss
+        # very thin diagonal marks on reflective machined metal. Hough line evidence is
+        # therefore used as a conservative second signal, not as a forced defect result.
+        linear_candidates = cls._detect_linear_surface_marks(blurred_gray, edges, cur_w, cur_h)
+        for candidate in linear_candidates:
+            # Avoid duplicate boxes that substantially overlap an existing anomaly.
+            cb = candidate["bounding_box"]
+            duplicate = False
+            for existing in detected_anomalies:
+                eb = existing["bounding_box"]
+                ix1 = max(cb["x_min"], eb["x_min"])
+                iy1 = max(cb["y_min"], eb["y_min"])
+                ix2 = min(cb["x_max"], eb["x_max"])
+                iy2 = min(cb["y_max"], eb["y_max"])
+                inter = max(0, ix2 - ix1) * max(0, iy2 - iy1)
+                ca = max(1, (cb["x_max"] - cb["x_min"]) * (cb["y_max"] - cb["y_min"]))
+                ea = max(1, (eb["x_max"] - eb["x_min"]) * (eb["y_max"] - eb["y_min"]))
+                if inter / float(min(ca, ea)) > 0.45:
+                    duplicate = True
+                    break
+            if not duplicate:
+                detected_anomalies.append(candidate)
+
         detected_anomalies.sort(key=lambda a: a["anomaly_score"], reverse=True)
         return detected_anomalies
+
+    @classmethod
+    def _detect_linear_surface_marks(cls, gray: np.ndarray, edges: np.ndarray, cur_w: int, cur_h: int) -> List[Dict[str, Any]]:
+        """Detect thin internal linear marks typical of scratches on machined surfaces."""
+        min_dim = min(cur_w, cur_h)
+        min_line_length = max(28, int(min_dim * 0.07))
+        max_line_length = int(min_dim * 0.65)
+
+        lines = cv2.HoughLinesP(
+            edges,
+            rho=1,
+            theta=np.pi / 180,
+            threshold=max(22, int(min_dim * 0.035)),
+            minLineLength=min_line_length,
+            maxLineGap=max(6, int(min_dim * 0.015))
+        )
+        if lines is None:
+            return []
+
+        candidates = []
+        for line in lines[:, 0, :]:
+            x1, y1, x2, y2 = [int(v) for v in line]
+            dx, dy = x2 - x1, y2 - y1
+            length = float(np.hypot(dx, dy))
+            if length < min_line_length or length > max_line_length:
+                continue
+
+            # Ignore marks too close to the image boundary, where ordinary object/background
+            # edges dominate. The relevance gate already established a foreground object.
+            margin = max(12, int(min_dim * 0.035))
+            if min(x1, x2) <= margin or min(y1, y2) <= margin or max(x1, x2) >= cur_w - margin or max(y1, y2) >= cur_h - margin:
+                continue
+
+            angle = abs(np.degrees(np.arctan2(dy, dx)))
+            if angle > 90:
+                angle = 180 - angle
+
+            pad = max(7, int(length * 0.10))
+            bx1 = max(0, min(x1, x2) - pad)
+            by1 = max(0, min(y1, y2) - pad)
+            bx2 = min(cur_w, max(x1, x2) + pad)
+            by2 = min(cur_h, max(y1, y2) + pad)
+            roi = gray[by1:by2, bx1:bx2]
+            if roi.size == 0:
+                continue
+
+            local_std = float(np.std(roi))
+            local_contrast = min(1.0, local_std / 45.0)
+            roi_edges = edges[by1:by2, bx1:bx2]
+            edge_density = float(np.count_nonzero(roi_edges)) / float(max(1, roi_edges.size))
+
+            # A scratch is expected to be long, thin, and locally high-contrast.
+            slenderness = min(1.0, max(0.0, (length / float(max(1, 2 * pad))) - 1.0) / 8.0)
+            signal = 0.50 * slenderness + 0.30 * min(1.0, edge_density / 0.20) + 0.20 * local_contrast
+            if signal < 0.50:
+                continue
+
+            # Convert the detector coordinates to the original image space.
+            scale_x = 1.0
+            scale_y = 1.0
+            ox1, oy1 = int(bx1 / scale_x), int(by1 / scale_y)
+            ox2, oy2 = int(bx2 / scale_x), int(by2 / scale_y)
+            norm_x_min = round(ox1 / float(cur_w), 3)
+            norm_y_min = round(oy1 / float(cur_h), 3)
+            norm_x_max = round(ox2 / float(cur_w), 3)
+            norm_y_max = round(oy2 / float(cur_h), 3)
+            center_x = (ox1 + ox2) / 2.0
+            center_y = (oy1 + oy2) / 2.0
+            horiz = "Left" if center_x < cur_w / 3 else ("Right" if center_x > cur_w * 2 / 3 else "Center")
+            vert = "Upper" if center_y < cur_h / 3 else ("Lower" if center_y > cur_h * 2 / 3 else "Middle")
+
+            candidates.append({
+                "bounding_box": {
+                    "x_min": ox1, "y_min": oy1, "x_max": ox2, "y_max": oy2,
+                    "norm_x_min": norm_x_min, "norm_y_min": norm_y_min,
+                    "norm_x_max": norm_x_max, "norm_y_max": norm_y_max,
+                },
+                "area_px": int(max(1, (ox2 - ox1) * (oy2 - oy1)),),
+                "area_ratio": round(((ox2 - ox1) * (oy2 - oy1)) / float(cur_w * cur_h), 4),
+                "location": f"{vert}-{horiz} surface",
+                "anomaly_score": round(min(0.95, max(0.55, signal)), 2),
+                "aspect_ratio": round(length / float(max(1, 2 * pad)), 2),
+                "edge_density": round(edge_density, 4),
+                "contrast_score": round(local_contrast, 3),
+                "linear_mark_angle": round(float(angle), 1),
+            })
+
+        # Keep only the strongest independent linear marks so texture does not flood the result.
+        candidates.sort(key=lambda a: a["anomaly_score"], reverse=True)
+        return candidates[:3]
