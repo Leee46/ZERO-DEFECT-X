@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StatCard } from '../components/common/StatCard';
 import { MachineCard } from '../components/machine/MachineCard';
 import { MachineDetailModal } from '../components/machine/MachineDetailModal';
 import { Badge } from '../components/common/Badge';
 import { DemoBanner } from '../components/common/DemoBanner';
-import { machineService } from '../services/machineService';
-import { inspectionService } from '../services/inspectionService';
+import { apiClient } from '../services/apiClient';
 import { Laptop2ConnectionCard } from '../components/machine/Laptop2ConnectionCard';
 import type { Machine } from '../types';
 import { Activity, ShieldAlert, AlertTriangle, Layers, PlusCircle, Search, Eye } from 'lucide-react';
@@ -17,14 +16,61 @@ interface CommandCenterProps {
 
 export const CommandCenter: React.FC<CommandCenterProps> = ({ onNavigate }) => {
   const [selectedMachine, setSelectedMachine] = useState<Machine | null>(null);
-  const machines = machineService.getAllMachines();
-  const inspections = inspectionService.getAllInspections();
+  const [machines, setMachines] = useState<Machine[]>([]);
+  const [inspections, setInspections] = useState<any[]>([]);
+  const [dashboard, setDashboard] = useState<any | null>(null);
+  const [rootCause, setRootCause] = useState<any | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const totalInspected = 1248;
-  const defectiveCount = 37;
-  const defectRate = ((defectiveCount / totalInspected) * 100).toFixed(2);
+  useEffect(() => {
+    let mounted = true;
+    const loadDashboard = async () => {
+      try {
+        const [dashboardData, machineData, inspectionData] = await Promise.all([
+          apiClient.get<any>('/dashboard'),
+          apiClient.get<any[]>('/machines'),
+          apiClient.get<any[]>('/inspections')
+        ]);
+        const rows: Machine[] = (Array.isArray(machineData) ? machineData : []).map((m: any) => ({
+          id: m.id,
+          name: m.machine_name || m.name || m.id,
+          status: m.status || 'NORMAL',
+          location: m.location || 'N/A',
+          currentTemp: m.temperature,
+          currentVibration: m.vibration,
+          currentPressure: m.pressure,
+          currentSpeed: m.speed,
+          defectRate: Number(m.defect_rate || 0),
+          riskLevel: Number(m.risk_score || 0) >= 75 ? 'CRITICAL' : Number(m.risk_score || 0) >= 50 ? 'HIGH' : Number(m.risk_score || 0) >= 25 ? 'MEDIUM' : 'LOW',
+          riskScore: Number(m.risk_score || 0),
+          baselineTemp: 70,
+          baselineVibration: 2.5,
+          primaryDefectType: 'Recorded defects'
+        } as Machine));
+        const records = Array.isArray(inspectionData) ? inspectionData : [];
+        const latestDefect = records.find((item: any) => item.status === 'DEFECTIVE');
+        let rc = null;
+        if (latestDefect) {
+          try { rc = await apiClient.get<any>(`/root-cause/${latestDefect.id}`); } catch { rc = null; }
+        }
+        if (mounted) {
+          setDashboard(dashboardData);
+          setMachines(rows);
+          setInspections(records);
+          setRootCause(rc);
+        }
+      } catch (err) {
+        if (mounted) setLoadError(err instanceof Error ? err.message : 'Unable to load live command-center data.');
+      }
+    };
+    loadDashboard();
+    return () => { mounted = false; };
+  }, []);
 
-  // Machine Defect Rate Bar Chart Data
+  const totalInspected = Number(dashboard?.total_inspected ?? 0);
+  const defectiveCount = Number(dashboard?.defective_units ?? 0);
+  const defectRate = Number(dashboard?.defect_rate ?? 0).toFixed(2);
+
   const machineChartData = machines.map((m) => ({
     name: m.id,
     rate: m.defectRate,
@@ -33,7 +79,14 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onNavigate }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* Top Banner */}
+      {loadError && (
+        <div className="scada-card" style={{ borderLeft: '4px solid #E55353' }}>
+          <span className="scada-label" style={{ color: '#E55353' }}>COMMAND CENTER DATA UNAVAILABLE</span>
+          <p style={{ color: '#8D9AAA', marginBottom: 0 }}>{loadError}</p>
+        </div>
+      )}
+
+            {/* Top Banner */}
       <DemoBanner message="COMMAND CENTER — Real-time Quality Inspection & Predictive Manufacturing Intelligence Node" />
 
       {/* Laptop 2 Virtual Factory Integration Connection Card */}
@@ -68,9 +121,9 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onNavigate }) => {
         />
         <StatCard
           title="CURRENT SYSTEM RISK"
-          value="HIGH"
-          subtext="Machine M03 Vibration Spike"
-          badgeText="SCORE 82"
+          value={dashboard?.current_system_risk || 'N/A'}
+          subtext={dashboard?.high_risk_machine ? `Highest recorded risk: ${dashboard.high_risk_machine}` : 'Awaiting machine risk data'}
+          badgeText={dashboard?.high_risk_machine ? `MACHINE ${dashboard.high_risk_machine}` : 'N/A'}
           badgeStatus="CRITICAL"
           icon={ShieldAlert}
           iconColor="#E55353"
@@ -159,17 +212,16 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onNavigate }) => {
               PROBABLE ROOT-CAUSE HIGHLIGHT — STATION M03
             </span>
           </div>
-          <Badge status="HIGH" />
+          <Badge status={rootCause?.is_insufficient_evidence ? 'INSUFFICIENT EVIDENCE' : rootCause ? 'EVIDENCE REVIEW' : 'N/A'} />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem', alignItems: 'center' }}>
           <div>
             <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#E55353', display: 'block', marginBottom: '0.3rem' }}>
-              PRIMARY FACTOR: Elevated Machine Vibration (4.8 mm/s vs baseline 2.1 mm/s)
+              PRIMARY FACTOR: {rootCause?.probable_factor || 'No current probable factor available'}
             </span>
             <p style={{ fontSize: '0.8rem', color: '#8D9AAA', lineHeight: 1.5 }}>
-              ZeroDefect-X root-cause engine identified a 84% evidence association score connecting recent Scratch defects on
-              Batch B1042 with drive spindle vibration spikes on Machine M03.
+              {rootCause?.disclaimer || 'Probable-cause analysis is generated from synchronized production records and is not proof of physical causation.'}
             </p>
           </div>
           <div style={{ textAlign: 'right' }}>
@@ -224,7 +276,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onNavigate }) => {
                     {insp.defects[0] ? <Badge status={insp.defects[0].severity} showDot={false} /> : <span style={{ color: '#5C6B7E' }}>—</span>}
                   </td>
                   <td className="font-mono">
-                    {insp.defects[0] ? `${insp.defects[0].confidence.toFixed(1)}%` : '99.4%'}
+                    {insp.defects[0] ? `${Number(insp.defects[0].confidence || 0).toFixed(1)}%` : 'N/A'}
                   </td>
                   <td className="font-mono" style={{ color: '#8D9AAA' }}>
                     {insp.timestamp}
