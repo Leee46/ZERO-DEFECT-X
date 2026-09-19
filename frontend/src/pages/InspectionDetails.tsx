@@ -35,6 +35,17 @@ export const InspectionDetails: React.FC<InspectionDetailsProps> = ({ inspection
           machineId: remote.machine_id || remote.machineId,
           shift: remote.shift_id || remote.shift,
           imageUrl: remote.image_path || remote.imageUrl || '',
+          parameters: {
+            temperature: remote.temperature ?? null,
+            vibration: remote.vibration ?? null,
+            pressure: remote.pressure ?? null,
+            speed: remote.speed ?? null,
+            envTemp: remote.environment_temperature ?? null,
+            envHumidity: remote.humidity ?? null
+          },
+          factory_status: remote.factory_status,
+          factory_source_label: remote.factory_source_label,
+          telemetry_timestamp: remote.telemetry_timestamp,
           defects: (remote.defects || []).map((d: any, idx: number) => ({
             ...d,
             id: d.id || `DEF-${idx}`,
