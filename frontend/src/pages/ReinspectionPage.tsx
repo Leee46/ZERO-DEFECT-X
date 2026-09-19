@@ -27,16 +27,21 @@ export const ReinspectionPage: React.FC<ReinspectionPageProps> = ({ onNavigate, 
     const initData = async () => {
       try {
         const actions = await inspectionService.getCorrectiveActionsAsync();
-        if (actions && actions.length > 0) {
-          const found = actionId ? actions.find(a => a.id === actionId) : actions[0];
-          setActiveAction(found || actions[0]);
+        if (!inspectionId) {
+          throw new Error('An original inspection ID is required to start a reinspection.');
+        }
+
+        const actions = await inspectionService.getCorrectiveActionsAsync();
+        if (actionId) {
+          setActiveAction(actions.find(a => a.id === actionId) || null);
         }
 
         const inspections = await inspectionService.getAllInspectionsAsync();
-        if (inspections && inspections.length > 0) {
-          const foundInsp = inspectionId ? inspections.find(i => i.id === inspectionId) : inspections[0];
-          setActiveInspection(foundInsp || inspections[0]);
+        const foundInsp = inspections.find(i => i.id === inspectionId);
+        if (!foundInsp) {
+          throw new Error(`Original inspection ${inspectionId} was not found.`);
         }
+        setActiveInspection(foundInsp);
 
         const reinspections = await inspectionService.getReinspectionsAsync();
         if (reinspections && reinspections.length > 0) {
@@ -44,6 +49,7 @@ export const ReinspectionPage: React.FC<ReinspectionPageProps> = ({ onNavigate, 
         }
       } catch (e) {
         console.error('Failed to load reinspection context', e);
+        setError(e instanceof Error ? e.message : 'Unable to load the linked inspection context.');
       }
     };
     initData();
