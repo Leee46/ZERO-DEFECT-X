@@ -48,9 +48,11 @@ export const DefectAnalyticsPage: React.FC<DefectAnalyticsPageProps> = () => {
     rate: Number(m.defect_rate || 0)
   }));
 
-  const defectTypeData = (analyticsData?.defect_distribution || []).map((d: any) => ({
+  const COLORS = ['#E55353', '#D99A2B', '#F59E0B', '#3B82F6', '#22A06B'];
+  const defectTypeData = (analyticsData?.defect_distribution || []).map((d: any, idx: number) => ({
     name: d.type,
-    value: Number(d.count || 0)
+    value: Number(d.count || 0),
+    color: COLORS[idx % COLORS.length]
   }));
 
   const vibrationCorrelationData = (analyticsData?.vibration_correlation || []).map((row: any) => ({
