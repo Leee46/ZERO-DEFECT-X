@@ -745,6 +745,35 @@ def get_analytics_defects(db: Session = Depends(get_db)):
 
     type_distribution = [{"type": k, "count": v} for k, v in type_counts.items()]
 
+    # Correlation-ready series from synchronized machine telemetry and inspection history.
+    # These are descriptive associations, not causal claims.
+    all_parameters = db.query(MachineParameter).order_by(MachineParameter.timestamp.asc()).all()
+    all_inspections = db.query(Inspection).order_by(Inspection.inspection_time.asc()).all()
+    vibration_correlation = []
+    temperature_correlation = []
+    correlation_window = datetime.timedelta(hours=6)
+    for param in all_parameters:
+        matched = [
+            insp for insp in all_inspections
+            if insp.machine_id == param.machine_id
+            and insp.inspection_time
+            and abs((insp.inspection_time - param.timestamp).total_seconds()) <= correlation_window.total_seconds()
+        ]
+        if matched:
+            defect_count = sum(1 for insp in matched if insp.status == "DEFECTIVE")
+            vibration_correlation.append({
+                "machine": param.machine_id,
+                "vibration": round(float(param.vibration), 2),
+                "defects": defect_count,
+                "sample_count": len(matched)
+            })
+            temperature_correlation.append({
+                "machine": param.machine_id,
+                "temperature": round(float(param.temperature), 1),
+                "defects": defect_count,
+                "sample_count": len(matched)
+            })
+
     return {
         "summary": {
             "total_inspected": total,
@@ -757,7 +786,9 @@ def get_analytics_defects(db: Session = Depends(get_db)):
         "machine_breakdown": machine_breakdown,
         "by_machine": machine_breakdown,
         "defect_distribution": type_distribution,
-        "by_defect_type": type_distribution
+        "by_defect_type": type_distribution,
+        "vibration_correlation": vibration_correlation,
+        "temperature_correlation": temperature_correlation
     }
 
 
