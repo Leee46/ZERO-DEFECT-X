@@ -131,7 +131,7 @@ export const InspectionDetails: React.FC<InspectionDetailsProps> = ({ inspection
             defects={currentInspection.defects || []}
             status={isNotAnalyzable ? 'NOT_ANALYZABLE' : isDefective ? 'DEFECTIVE' : 'PASS'}
             modelProvider="OpenCV Anomaly Detector (Development-stage computer vision)"
-            confidence={Math.round((currentInspection.overall_confidence || currentInspection.anomaly_score || 0.88) * 100)}
+            confidence={typeof currentInspection.overall_confidence === 'number' ? Math.round(currentInspection.overall_confidence * 100) : typeof currentInspection.anomaly_score === 'number' ? Math.round(currentInspection.anomaly_score * 100) : undefined}
           />
         </div>
 
