@@ -8,13 +8,7 @@ interface DefectSummaryCardProps {
 }
 
 export const DefectSummaryCard: React.FC<DefectSummaryCardProps> = ({ inspection }) => {
-  const primaryDefect = inspection.defects?.[0] || (inspection.status === 'DEFECTIVE' ? {
-    type: 'Surface Scratch',
-    severity: 'Medium',
-    location: 'Upper Right',
-    confidence: Math.round((inspection.overall_confidence || inspection.anomaly_score || 0.88) * 100),
-    description: 'Linear surface scratch anomaly detected on metallic ring perimeter.'
-  } : null);
+  const primaryDefect = inspection.defects?.[0] || null;
 
   const rootCauseFactor = inspection.root_cause?.probable_factor || 'Elevated Machine Vibration';
   const requiresVerification = inspection.root_cause?.verification_required ?? true;
@@ -105,7 +99,7 @@ export const DefectSummaryCard: React.FC<DefectSummaryCardProps> = ({ inspection
               {rootCauseFactor}
             </span>
             <span style={{ fontSize: '0.75rem', color: '#8D9AAA', marginTop: '0.2rem', display: 'block' }}>
-              Observed Association: Machine vibration (4.8 mm/s) on M03 correlates with surface scratch defect occurrence.
+              {inspection.root_cause?.evidence?.[0] || 'Visual defect detected; correlate with machine telemetry and historical baseline before assigning cause.'}
             </span>
           </div>
         </div>
@@ -113,10 +107,14 @@ export const DefectSummaryCard: React.FC<DefectSummaryCardProps> = ({ inspection
         <div style={{ padding: '1.5rem', textAlign: 'center', backgroundColor: '#162235', borderRadius: '4px' }}>
           <CheckCircle2 style={{ width: '36px', height: '36px', color: '#22A06B', margin: '0 auto 0.5rem auto' }} />
           <span style={{ display: 'block', fontWeight: 700, color: '#22A06B', fontSize: '1rem' }}>
-            SURFACE QUALITY VERIFIED - ZERO DEFECTS
+            SURFACE QUALITY VERIFIED — ZERO DEFECTS DETECTED
           </span>
           <span style={{ fontSize: '0.8rem', color: '#8D9AAA' }}>
-            Model Confidence: 99.4% | Machine condition: Normal baseline
+            OpenCV confidence: {typeof inspection.overall_confidence === 'number'
+              ? (inspection.overall_confidence * 100).toFixed(1)
+              : typeof inspection.anomaly_score === 'number'
+                ? (inspection.anomaly_score * 100).toFixed(1)
+                : 'N/A'}%
           </span>
         </div>
       )}
