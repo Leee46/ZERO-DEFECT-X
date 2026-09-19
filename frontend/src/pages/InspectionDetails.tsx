@@ -26,7 +26,10 @@ export const InspectionDetails: React.FC<InspectionDetailsProps> = ({ inspection
         if (!inspectionId) {
           throw new Error('No inspection ID was supplied.');
         }
-        const remote = await apiClient.get<any>(`/inspections/${inspectionId}`);
+        const [remote, rootCause] = await Promise.all([
+          apiClient.get<any>(`/inspections/${inspectionId}`),
+          apiClient.get<any>(`/root-cause/${inspectionId}`)
+        ]);
         const normalized = {
           ...remote,
           status: remote.status,
@@ -46,6 +49,7 @@ export const InspectionDetails: React.FC<InspectionDetailsProps> = ({ inspection
           factory_status: remote.factory_status,
           factory_source_label: remote.factory_source_label,
           telemetry_timestamp: remote.telemetry_timestamp,
+          root_cause: rootCause,
           defects: (remote.defects || []).map((d: any, idx: number) => ({
             ...d,
             id: d.id || `DEF-${idx}`,
