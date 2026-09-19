@@ -40,6 +40,7 @@ export const InspectionDetails: React.FC<InspectionDetailsProps> = ({ inspection
 
   const currentInspection = inspection || inspectionService.getAllInspections()[0];
   const isDefective = currentInspection.status === 'DEFECTIVE' || currentInspection.status === 'FLAGGED';
+  const isNotAnalyzable = currentInspection.status === 'NOT_ANALYZABLE';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -49,6 +50,28 @@ export const InspectionDetails: React.FC<InspectionDetailsProps> = ({ inspection
       }} />
 
       <DemoBanner message={`INSPECTION RECORD — ID: ${currentInspection.id} | Product: ${currentInspection.productId || currentInspection.product_id}`} />
+
+      {isNotAnalyzable && (
+        <div
+          className="scada-card"
+          style={{
+            backgroundColor: '#2C2417',
+            border: '1px solid #D99A2B',
+            borderLeft: '5px solid #D99A2B',
+            padding: '1.25rem'
+          }}
+        >
+          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#F3C969', marginBottom: '0.4rem' }}>
+            IMAGE CANNOT BE ANALYZED
+          </div>
+          <div style={{ fontSize: '0.85rem', color: '#D8D1C2' }}>
+            {currentInspection.severity_reason || currentInspection.not_analyzable_reason || 'The upload did not contain a sufficiently clear, inspectable product/component image.'}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: '#9D9482', marginTop: '0.6rem' }}>
+            Upload a clear, close image of the manufacturing component. No defect, root cause, or risk conclusion was generated from this image.
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
         {/* Left Column: Vision Canvas */}
