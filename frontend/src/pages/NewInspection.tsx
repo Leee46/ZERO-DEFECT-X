@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { SAMPLE_PRODUCTS } from '../data/mockData';
-import { inspectionService } from '../services/inspectionService';
 import { apiClient, getApiBaseUrl } from '../services/apiClient';
 import { WorkflowStepper } from '../components/workflow/WorkflowStepper';
 import { DemoBanner } from '../components/common/DemoBanner';
