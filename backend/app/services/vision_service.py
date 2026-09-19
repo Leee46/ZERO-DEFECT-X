@@ -56,5 +56,6 @@ class YOLOVisionProvider(VisionProvider):
 
 
 def get_vision_provider() -> VisionProvider:
-    """Factory dependency for vision provider instance."""
-    return DemoVisionProvider()
+    """Factory dependency for the real inspection provider."""
+    from app.vision.opencv_provider import OpenCVVisionProvider
+    return OpenCVVisionProvider()
