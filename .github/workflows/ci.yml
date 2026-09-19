@@ -1,5 +1,9 @@
 name: ZERO-DEFECT X CI
 
+concurrency:
+  group: zero-defect-x-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main]
