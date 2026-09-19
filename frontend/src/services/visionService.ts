@@ -108,14 +108,14 @@ export class BackendVisionProvider implements VisionModelProvider {
     const defects: DefectItem[] = (result.defects || []).map((defect: any, index: number) => ({
       id: defect.id || `DEF-${index + 1}`,
       type: defect.defect_type || 'Surface Anomaly',
-      confidence: Number(defect.confidence ?? defect.anomaly_score ?? 0),
+      confidence: (() => { const value = Number(defect.confidence ?? defect.anomaly_score ?? 0); return value <= 1 ? Math.round(value * 100) : Math.round(value); })(),
       severity: defect.severity || 'LOW',
       location: defect.location || 'Not localized',
       boundingBox: {
-        x: Number(defect.bounding_box?.x_min ?? defect.x_min ?? 0),
-        y: Number(defect.bounding_box?.y_min ?? defect.y_min ?? 0),
-        width: Number(defect.bounding_box?.x_max ?? defect.x_max ?? 0) - Number(defect.bounding_box?.x_min ?? defect.x_min ?? 0),
-        height: Number(defect.bounding_box?.y_max ?? defect.y_max ?? 0) - Number(defect.bounding_box?.y_min ?? defect.y_min ?? 0),
+        x: Number(defect.bounding_box?.norm_x_min ?? defect.x_min ?? 0) * 800,
+        y: Number(defect.bounding_box?.norm_y_min ?? defect.y_min ?? 0) * 600,
+        width: (Number(defect.bounding_box?.norm_x_max ?? defect.x_max ?? 0) - Number(defect.bounding_box?.norm_x_min ?? defect.x_min ?? 0)) * 800,
+        height: (Number(defect.bounding_box?.norm_y_max ?? defect.y_max ?? 0) - Number(defect.bounding_box?.norm_y_min ?? defect.y_min ?? 0)) * 600,
         label: defect.defect_type || 'Surface Anomaly'
       },
       description: defect.description || ''
