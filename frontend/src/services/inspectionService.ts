@@ -88,14 +88,16 @@ class InspectionService {
     shift: string,
     imageSource: string | File
   ): Promise<Inspection> {
+    if (!(imageSource instanceof File)) {
+      throw new Error('A real product image file is required for inspection.');
+    }
+
     const visionResult = await visionService.analyze({
       productId,
       imageSource,
       machineId,
       batchId
     });
-
-    const machine = machineService.getMachineById(machineId) || machineService.getAllMachines()[0];
 
     const newInspection: Inspection = {
       id: visionResult.inspectionId,
@@ -106,22 +108,17 @@ class InspectionService {
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
       status: visionResult.status,
       defects: visionResult.defects,
-      imageUrl: typeof imageSource === 'string' ? imageSource : URL.createObjectURL(imageSource),
+      imageUrl: URL.createObjectURL(imageSource),
       parameters: {
-        temperature: machine.currentTemp,
-        vibration: machine.currentVibration,
-        pressure: machine.currentPressure,
-        speed: machine.currentSpeed,
-        envTemp: 29.0,
-        envHumidity: 65
+        temperature: null,
+        vibration: null,
+        pressure: null,
+        speed: null,
+        envTemp: null,
+        envHumidity: null
       },
-      isControlledDemo: true
+      isControlledDemo: false
     };
-
-    if (newInspection.status === 'DEFECTIVE') {
-      newInspection.rootCause = rootCauseService.analyzeRootCause(newInspection, machine);
-      newInspection.riskAssessment = riskService.calculateMachineRisk(machine);
-    }
 
     this.addInspection(newInspection);
     return newInspection;
