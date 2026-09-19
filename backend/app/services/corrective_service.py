@@ -163,7 +163,7 @@ class CorrectiveActionService:
 
         # Apply maintenance to the connected Virtual Factory first. We only persist
         # telemetry returned by that node; never manufacture a post-maintenance reading.
-        laptop2_url = os.environ.get("LAPTOP2_URL", "http://127.0.0.1:8000").strip().rstrip("/")
+        laptop2_url = os.environ.get("LAPTOP2_URL", "http://127.0.0.1:8001").strip().rstrip("/")
         sync_success = False
         telemetry = None
         telemetry_data = {}
