@@ -15,56 +15,80 @@ interface InspectionDetailsProps {
 
 export const InspectionDetails: React.FC<InspectionDetailsProps> = ({ inspectionId, onNavigate }) => {
   const [inspection, setInspection] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
     async function loadData() {
-      if (inspectionId) {
-        try {
-          const remote = await apiClient.get<any>(`/inspections/${inspectionId}`);
-          if (remote && isMounted) {
-            const normalized = {
-              ...remote,
-              status: remote.status,
-              productId: remote.product_id || remote.productId,
-              batchId: remote.batch_id || remote.batchId,
-              machineId: remote.machine_id || remote.machineId,
-              shift: remote.shift_id || remote.shift,
-              imageUrl: remote.image_path || remote.imageUrl || '',
-              defects: (remote.defects || []).map((d: any, idx: number) => ({
-                ...d,
-                id: d.id || `DEF-${idx}`,
-                type: d.defect_type || d.type || 'Surface Anomaly',
-                confidence: d.confidence ?? 0,
-                boundingBox: d.x_min != null && d.y_min != null && d.x_max != null && d.y_max != null
-                  ? {
-                      x: Number(d.x_min) * 800,
-                      y: Number(d.y_min) * 600,
-                      width: Math.max(0, Number(d.x_max) - Number(d.x_min)) * 800,
-                      height: Math.max(0, Number(d.y_max) - Number(d.y_min)) * 600,
-                      label: d.defect_type || 'DEFECT'
-                    }
-                  : undefined
-              }))
-            };
-            setInspection(normalized);
-            return;
-          }
-        } catch (e) {
-          // fallback
+      setLoading(true);
+      setLoadError(null);
+      try {
+        if (!inspectionId) {
+          throw new Error('No inspection ID was supplied.');
         }
+        const remote = await apiClient.get<any>(`/inspections/${inspectionId}`);
+        const normalized = {
+          ...remote,
+          status: remote.status,
+          productId: remote.product_id || remote.productId,
+          batchId: remote.batch_id || remote.batchId,
+          machineId: remote.machine_id || remote.machineId,
+          shift: remote.shift_id || remote.shift,
+          imageUrl: remote.image_path || remote.imageUrl || '',
+          defects: (remote.defects || []).map((d: any, idx: number) => ({
+            ...d,
+            id: d.id || `DEF-${idx}`,
+            type: d.defect_type || d.type || 'Surface Anomaly',
+            confidence: d.confidence ?? 0,
+            boundingBox: d.x_min != null && d.y_min != null && d.x_max != null && d.y_max != null
+              ? {
+                  x: Number(d.x_min) * 800,
+                  y: Number(d.y_min) * 600,
+                  width: Math.max(0, Number(d.x_max) - Number(d.x_min)) * 800,
+                  height: Math.max(0, Number(d.y_max) - Number(d.y_min)) * 600,
+                  label: d.defect_type || 'DEFECT'
+                }
+              : undefined
+          }))
+        };
+        if (isMounted) setInspection(normalized);
+      } catch (e) {
+        if (isMounted) {
+          setLoadError(e instanceof Error ? e.message : 'Unable to load the inspection record from the backend.');
+          setInspection(null);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
       }
-      const all = inspectionService.getAllInspections();
-      const fallback = inspectionId ? inspectionService.getInspectionById(inspectionId) || all[0] : all[0];
-      if (isMounted) setInspection(fallback);
     }
     loadData();
     return () => { isMounted = false; };
   }, [inspectionId]);
 
-  const currentInspection = inspection || inspectionService.getAllInspections()[0];
-  const isDefective = currentInspection.status === 'DEFECTIVE' || currentInspection.status === 'FLAGGED';
-  const isNotAnalyzable = currentInspection.status === 'NOT_ANALYZABLE';
+  const currentInspection = inspection;
+  const isDefective = currentInspection?.status === 'DEFECTIVE' || currentInspection?.status === 'FLAGGED';
+  const isNotAnalyzable = currentInspection?.status === 'NOT_ANALYZABLE';
+
+  if (loading) {
+    return (
+      <div className="scada-card">
+        <span className="scada-label">LOADING INSPECTION RECORD...</span>
+      </div>
+    );
+  }
+
+  if (!currentInspection) {
+    return (
+      <div className="scada-card" style={{ borderLeft: '4px solid #E55353' }}>
+        <span className="scada-label" style={{ color: '#E55353' }}>INSPECTION RECORD UNAVAILABLE</span>
+        <p style={{ color: '#8D9AAA' }}>{loadError || 'The backend did not return the requested inspection.'}</p>
+        <button className="scada-btn scada-btn-primary" onClick={() => onNavigate('new-inspection')}>
+          <Search size={16} /> RETURN TO NEW INSPECTION
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
