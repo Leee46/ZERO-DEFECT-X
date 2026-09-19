@@ -9,25 +9,38 @@ class MachineService {
       const data = await apiClient.get<any[]>('/machines');
       if (Array.isArray(data) && data.length > 0) {
         return data.map((m) => {
-          const fallback = this.machines.find((x) => x.id === m.id);
-          const riskLevel: SeverityLevel = m.risk_score >= 75 ? 'CRITICAL' : (m.risk_score >= 50 ? 'HIGH' : (m.risk_score >= 25 ? 'MEDIUM' : 'LOW'));
-          const status: MachineStatus = m.status === 'WARNING' ? 'WARNING' : (m.status === 'FAULT' ? 'FAULT' : 'NORMAL');
-          
+          const riskScore = Number(m.risk_score ?? 0);
+          const riskLevel: SeverityLevel =
+            riskScore >= 75 ? 'CRITICAL' :
+            riskScore >= 50 ? 'HIGH' :
+            riskScore >= 25 ? 'MEDIUM' : 'LOW';
+          const status: MachineStatus =
+            m.status === 'WARNING' ? 'WARNING' :
+            m.status === 'FAULT' ? 'FAULT' :
+            m.status === 'MAINTENANCE' ? 'MAINTENANCE' : 'NORMAL';
+
           return {
-            ...(fallback || {}),
-            id: m.id,
-            name: m.machine_name || m.name || fallback?.name || m.id,
-            status: status,
-            location: m.location || fallback?.location || 'N/A',
-            currentTemp: m.temperature ?? m.currentTemp ?? fallback?.currentTemp ?? 0,
-            currentVibration: m.vibration ?? m.currentVibration ?? fallback?.currentVibration ?? 0,
-            currentPressure: m.pressure ?? m.currentPressure ?? fallback?.currentPressure ?? 0,
-            currentSpeed: m.speed ?? m.currentSpeed ?? fallback?.currentSpeed ?? 0,
-            defectRate: m.defect_rate ?? m.defectRate ?? fallback?.defectRate ?? 0,
-            riskLevel: riskLevel,
-            riskScore: m.risk_score ?? m.riskScore ?? fallback?.riskScore ?? 0,
+            id: String(m.id),
+            name: m.machine_name || m.name || String(m.id),
+            status,
+            location: m.location || 'N/A',
+            currentTemp: Number(m.temperature ?? m.currentTemp ?? 0),
+            baselineTemp: Number(m.baseline_temp ?? 70),
+            currentVibration: Number(m.vibration ?? m.currentVibration ?? 0),
+            baselineVibration: Number(m.baseline_vibration ?? 2.5),
+            currentPressure: Number(m.pressure ?? m.currentPressure ?? 0),
+            baselinePressure: Number(m.baseline_pressure ?? 6.0),
+            currentSpeed: Number(m.speed ?? m.currentSpeed ?? 0),
+            productionCount: Number(m.production_count ?? 0),
+            defectCount: Number(m.defect_count ?? 0),
+            defectRate: Number(m.defect_rate ?? 0),
+            riskLevel,
+            riskScore,
+            primaryDefectType: m.primary_defect_type || 'Normal',
+            recentAlerts: Number(m.recent_alerts ?? 0),
+            historicalTrend: Array.isArray(m.historical_trend) ? m.historical_trend : []
           };
-        });
+        })
       }
     } catch (err) {
       console.warn('Backend machine API unavailable; no synthetic machine records will be substituted.');
