@@ -506,7 +506,41 @@ def get_inspection(inspection_id: str, db: Session = Depends(get_db)):
     insp = db.query(Inspection).filter(Inspection.id == inspection_id).first()
     if not insp:
         raise HTTPException(status_code=404, detail=f"Inspection {inspection_id} not found")
-    return insp
+
+    # Rehydrate the production context saved at inspection time so the detail
+    # page does not lose telemetry after navigating away from the upload response.
+    param = db.query(MachineParameter).filter(
+        MachineParameter.machine_id == insp.machine_id
+    ).order_by(
+        MachineParameter.timestamp.desc()
+    ).first()
+    env = db.query(EnvironmentReading).order_by(
+        EnvironmentReading.timestamp.desc()
+    ).first()
+
+    payload = {
+        "id": insp.id,
+        "product_id": insp.product_id,
+        "batch_id": insp.batch_id,
+        "machine_id": insp.machine_id,
+        "shift_id": insp.shift_id,
+        "image_path": insp.image_path,
+        "annotated_image_url": getattr(insp, "annotated_image_url", None),
+        "inspection_time": insp.inspection_time,
+        "status": insp.status,
+        "overall_confidence": insp.overall_confidence,
+        "defects": insp.defects,
+        "temperature": param.temperature if param else None,
+        "vibration": param.vibration if param else None,
+        "pressure": param.pressure if param else None,
+        "speed": param.speed if param else None,
+        "environment_temperature": env.temperature if env else None,
+        "humidity": env.humidity if env else None,
+        "factory_status": "ONLINE" if param else "Virtual Factory Offline",
+        "factory_source_label": "SIMULATED FACTORY DATA" if param else "OFFLINE",
+        "telemetry_timestamp": param.timestamp if param else None
+    }
+    return payload
 
 
 @router.post("/inspections", response_model=InspectionOut)
