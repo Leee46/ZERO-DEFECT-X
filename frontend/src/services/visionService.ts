@@ -1,4 +1,5 @@
 import type { DefectItem } from '../types';
+import { apiClient } from './apiClient';
 
 export interface VisionAnalysisRequest {
   productId: string;
@@ -9,7 +10,7 @@ export interface VisionAnalysisRequest {
 
 export interface VisionAnalysisResult {
   inspectionId: string;
-  status: 'PASS' | 'DEFECTIVE';
+  status: 'PASS' | 'DEFECTIVE' | 'NOT_ANALYZABLE';
   defects: DefectItem[];
   modelProvider: string;
   modelConfidenceOverall: number;
@@ -86,6 +87,52 @@ export class DemoVisionProvider implements VisionModelProvider {
 }
 
 /**
+ * BackendVisionProvider - Production workflow adapter.
+ * Sends the real product image to the FastAPI OpenCV inspection endpoint.
+ */
+export class BackendVisionProvider implements VisionModelProvider {
+  public providerName = 'OpenCVVisionProvider (FastAPI Backend)';
+
+  async analyzeImage(request: VisionAnalysisRequest): Promise<VisionAnalysisResult> {
+    if (!(request.imageSource instanceof File)) {
+      throw new Error('A real product image file is required for vision analysis.');
+    }
+
+    const formData = new FormData();
+    formData.append('image', request.imageSource);
+    formData.append('machine_id', request.machineId);
+    formData.append('product_id', request.productId);
+    formData.append('batch_id', request.batchId);
+
+    const result = await apiClient.uploadVisionImage<any>(formData);
+    const defects: DefectItem[] = (result.defects || []).map((defect: any, index: number) => ({
+      id: defect.id || `DEF-${index + 1}`,
+      type: defect.defect_type || 'Surface Anomaly',
+      confidence: Number(defect.confidence ?? defect.anomaly_score ?? 0),
+      severity: defect.severity || 'LOW',
+      location: defect.location || 'Not localized',
+      boundingBox: {
+        x: Number(defect.bounding_box?.x_min ?? defect.x_min ?? 0),
+        y: Number(defect.bounding_box?.y_min ?? defect.y_min ?? 0),
+        width: Number(defect.bounding_box?.x_max ?? defect.x_max ?? 0) - Number(defect.bounding_box?.x_min ?? defect.x_min ?? 0),
+        height: Number(defect.bounding_box?.y_max ?? defect.y_max ?? 0) - Number(defect.bounding_box?.y_min ?? defect.y_min ?? 0),
+        label: defect.defect_type || 'Surface Anomaly'
+      },
+      description: defect.description || ''
+    }));
+
+    return {
+      inspectionId: result.inspection_id,
+      status: result.status === 'NOT_ANALYZABLE' ? 'NOT_ANALYZABLE' : result.status === 'DEFECTIVE' ? 'DEFECTIVE' : 'PASS',
+      defects,
+      modelProvider: result.engine || this.providerName,
+      modelConfidenceOverall: Number(result.overall_confidence ?? 0),
+      inferenceTimeMs: 0
+    };
+  }
+}
+
+/**
  * YOLOVisionProvider - Future placeholder interface implementation for actual ONNX / TensorRT / FastAPI backend model
  */
 export class YOLOVisionProvider implements VisionModelProvider {
@@ -101,7 +148,7 @@ class VisionServiceManager {
   private activeProvider: VisionModelProvider;
 
   constructor() {
-    this.activeProvider = new DemoVisionProvider();
+    this.activeProvider = new BackendVisionProvider();
   }
 
   public getActiveProviderName(): string {
