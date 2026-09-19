@@ -56,7 +56,7 @@ export const RootCausePage: React.FC<RootCausePageProps> = ({ inspectionId, onNa
   const candidates = rootCauseData?.candidate_factors || [];
   const currentCondition = rootCauseData?.current_condition || 'Telemetry unavailable';
   const histComp = rootCauseData?.historical_comparison || { normal_vibration_defect_rate: null, elevated_vibration_defect_rate: null, matching_historical_count: 0 };
-  const isNormal = targetInspection.status === 'PASS' || rootCauseData?.status === 'PASSED';
+  const isNormal = targetInspection?.status === 'PASS' || rootCauseData?.status === 'PASSED';
 
   const chartData = candidates.map((c: any) => ({
     factor: c.factor,
