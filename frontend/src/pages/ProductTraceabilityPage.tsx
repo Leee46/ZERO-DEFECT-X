@@ -3,6 +3,7 @@ import { apiClient } from '../services/apiClient';
 import { DemoBanner } from '../components/common/DemoBanner';
 import { Badge } from '../components/common/Badge';
 import { GitPullRequest } from 'lucide-react';
+import type { TraceabilityStep } from '../types';
 
 interface ProductTraceabilityPageProps {
   onNavigate?: (tabId: string) => void;
@@ -97,7 +98,7 @@ export const ProductTraceabilityPage: React.FC<ProductTraceabilityPageProps> = (
         </span>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', position: 'relative', paddingLeft: '1.5rem', borderLeft: '2px solid #26364A' }}>
-          {record.timeline.map((step) => {
+          {(record.timeline as TraceabilityStep[]).map((step) => {
             const isWarn = step.status === 'WARNING';
             const isComp = step.status === 'COMPLETED';
 
