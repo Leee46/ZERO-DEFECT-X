@@ -32,9 +32,9 @@ export class RiskService {
     }
 
     let riskLevel: SeverityLevel = 'LOW';
-    if (score >= 70) riskLevel = 'HIGH';
+    if (score >= 85) riskLevel = 'CRITICAL';
+    else if (score >= 70) riskLevel = 'HIGH';
     else if (score >= 40) riskLevel = 'MEDIUM';
-    else if (score >= 85) riskLevel = 'CRITICAL';
 
     return {
       machineId: machine.id,
