@@ -19,7 +19,7 @@ export const NewInspection: React.FC<NewInspectionProps> = ({ onNavigate }) => {
   const [selectedProduct, setSelectedProduct] = useState(SAMPLE_PRODUCTS[0]);
   const [batchId, setBatchId] = useState(SAMPLE_PRODUCTS[0].batchId);
   const [machineId, setMachineId] = useState(SAMPLE_PRODUCTS[0].machineId);
-  const [shift, setShift] = useState(SAMPLE_PRODUCTS[0].shift);
+  const [shift, setShift] = useState(SAMPLE_PRODUCTS[0].shift === 'Shift A' ? 'S1' : SAMPLE_PRODUCTS[0].shift === 'Shift C' ? 'S3' : 'S2');
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -44,7 +44,7 @@ export const NewInspection: React.FC<NewInspectionProps> = ({ onNavigate }) => {
     setSelectedProduct(prod);
     setBatchId(prod.batchId);
     setMachineId(prod.machineId);
-    setShift(prod.shift);
+    setShift(prod.shift === 'Shift A' ? 'S1' : prod.shift === 'Shift C' ? 'S3' : 'S2');
   };
 
   const processFile = (file: File) => {
