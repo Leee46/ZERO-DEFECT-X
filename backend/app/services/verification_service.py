@@ -101,7 +101,7 @@ class VerificationService:
         original_inspection_id: str,
         corrective_action_id: Optional[str] = None,
         status: str = "PASSED",
-        overall_confidence: float = 0.95,
+        overall_confidence: Optional[float] = None,
         defects: Optional[list] = None,
         image_path: Optional[str] = None,
         notes: Optional[str] = None
