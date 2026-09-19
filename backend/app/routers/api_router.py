@@ -893,11 +893,10 @@ def verify_reinspection_endpoint(
 
 @router.post("/reinspections/analyze")
 async def analyze_and_reinspect(
-    image: Optional[UploadFile] = File(None),
+    image: UploadFile = File(...),
     original_inspection_id: str = Form(...),
     corrective_action_id: Optional[str] = Form(None),
     machine_id: str = Form("M03"),
-    simulate_defect: bool = Form(False),
     db: Session = Depends(get_db)
 ):
     """
@@ -905,36 +904,36 @@ async def analyze_and_reinspect(
     Processes the reinspection image with OpenCV Vision Provider, records before/after state,
     and runs deterministic verification engine.
     """
-    rel_raw_url = None
-    if image and image.filename:
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        raw_dir = os.path.join(base_dir, "uploads", "reinspections")
-        os.makedirs(raw_dir, exist_ok=True)
-        ext = os.path.splitext(image.filename)[1].lower() or ".jpg"
-        save_name = f"REINSP_{uuid.uuid4().hex[:6]}{ext}"
-        save_path = os.path.join(raw_dir, save_name)
-        with open(save_path, "wb") as buffer:
-            shutil.copyfileobj(image.file, buffer)
-        rel_raw_url = f"/uploads/reinspections/{save_name}"
+    # Reinspection is evidence-bearing: a real post-maintenance image is required.
+    # Never synthesize a PASS/DEFECTIVE result when an image is missing.
+    ext = os.path.splitext(image.filename)[1].lower() if image.filename else ""
+    if ext not in {".jpg", ".jpeg", ".png", ".webp"}:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported reinspection image extension '{ext}'. Allowed: .jpg, .jpeg, .png, .webp"
+        )
 
-        # Run vision analysis
-        cv_provider = OpenCVVisionProvider()
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    raw_dir = os.path.join(base_dir, "uploads", "reinspections")
+    os.makedirs(raw_dir, exist_ok=True)
+    save_name = f"REINSP_{uuid.uuid4().hex[:6]}{ext}"
+    save_path = os.path.join(raw_dir, save_name)
+    with open(save_path, "wb") as buffer:
+        shutil.copyfileobj(image.file, buffer)
+    rel_raw_url = f"/uploads/reinspections/{save_name}"
+
+    # Run the same real vision engine used by first-pass inspection.
+    cv_provider = OpenCVVisionProvider()
+    try:
         vision_res = cv_provider.analyze_image(save_path, machine_id=machine_id)
-        status = vision_res["status"]
-        confidence = vision_res["overall_confidence"]
-        defects = vision_res.get("defects", [])
-    else:
-        # If simulated demo mode
-        if simulate_defect:
-            status = "DEFECTIVE"
-            confidence = 0.91
-            defects = [{"defect_type": "Scratch", "severity": "Medium", "confidence": 0.91, "location": "Upper-right"}]
-            rel_raw_url = "/uploads/inspections/raw/sample_scratch_01.jpg"
-        else:
-            status = "PASSED"
-            confidence = 0.98
-            defects = []
-            rel_raw_url = "/uploads/inspections/raw/sample_pass_01.jpg"
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Reinspection vision analysis failed: {exc}")
+
+    status = vision_res["status"]
+    confidence = vision_res["overall_confidence"]
+    defects = vision_res.get("defects", [])
 
     reinsp = verification_engine.create_reinspection_record(
         db=db,
