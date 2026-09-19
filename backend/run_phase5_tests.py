@@ -2,7 +2,7 @@ import requests
 import json
 import sys
 
-BASE_URL = "http://localhost:8001/api"
+BASE_URL = "http://localhost:8000/api"
 
 def run_tests():
     print("==================================================")
