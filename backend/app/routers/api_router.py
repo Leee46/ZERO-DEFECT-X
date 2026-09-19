@@ -719,12 +719,18 @@ def get_analytics_defects(db: Session = Depends(get_db)):
     temperature_correlation = []
     correlation_window = datetime.timedelta(hours=6)
     for param in all_parameters:
-        matched = [
-            insp for insp in all_inspections
-            if insp.machine_id == param.machine_id
-            and insp.inspection_time
-            and abs((insp.inspection_time - param.timestamp).total_seconds()) <= correlation_window.total_seconds()
-        ]
+        matched = []
+        for insp in all_inspections:
+            if insp.machine_id != param.machine_id or not insp.inspection_time or not param.timestamp:
+                continue
+            insp_ts = insp.inspection_time
+            param_ts = param.timestamp
+            if insp_ts.tzinfo is None and param_ts.tzinfo is not None:
+                insp_ts = insp_ts.replace(tzinfo=param_ts.tzinfo)
+            elif insp_ts.tzinfo is not None and param_ts.tzinfo is None:
+                param_ts = param_ts.replace(tzinfo=insp_ts.tzinfo)
+            if abs((insp_ts - param_ts).total_seconds()) <= correlation_window.total_seconds():
+                matched.append(insp)
         if matched:
             defect_count = sum(1 for insp in matched if insp.status == "DEFECTIVE")
             vibration_correlation.append({
