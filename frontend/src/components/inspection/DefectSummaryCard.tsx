@@ -103,6 +103,15 @@ export const DefectSummaryCard: React.FC<DefectSummaryCardProps> = ({ inspection
             </span>
           </div>
         </div>
+      ) : inspection.status === 'DEFECTIVE' ? (
+        <div style={{ padding: '1.25rem', backgroundColor: '#162235', border: '1px solid #E55353', borderRadius: '4px' }}>
+          <span style={{ display: 'block', fontWeight: 700, color: '#E55353', fontSize: '1rem' }}>
+            DEFECT DETECTED — LOCALIZATION PENDING
+          </span>
+          <span style={{ fontSize: '0.8rem', color: '#8D9AAA', display: 'block', marginTop: '0.4rem' }}>
+            The vision engine returned a defective result but did not provide a usable bounding box.
+          </span>
+        </div>
       ) : (
         <div style={{ padding: '1.5rem', textAlign: 'center', backgroundColor: '#162235', borderRadius: '4px' }}>
           <CheckCircle2 style={{ width: '36px', height: '36px', color: '#22A06B', margin: '0 auto 0.5rem auto' }} />
