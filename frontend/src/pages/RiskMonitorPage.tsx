@@ -1,6 +1,5 @@
-import React from 'react';
-import { machineService } from '../services/machineService';
-import { riskService } from '../services/riskService';
+import React, { useEffect, useState } from 'react';
+import { apiClient } from '../services/apiClient';
 import { WorkflowStepper } from '../components/workflow/WorkflowStepper';
 import { DemoBanner } from '../components/common/DemoBanner';
 import { Badge } from '../components/common/Badge';
@@ -11,12 +10,60 @@ interface RiskMonitorPageProps {
 }
 
 export const RiskMonitorPage: React.FC<RiskMonitorPageProps> = ({ onNavigate }) => {
-  const machines = machineService.getAllMachines();
+  const [machineRisks, setMachineRisks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const machineRisks = machines.map((machine) => ({
-    machine,
-    risk: riskService.calculateMachineRisk(machine)
-  }));
+  useEffect(() => {
+    let mounted = true;
+    const loadRiskData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const [machines, riskResponse] = await Promise.all([
+          apiClient.get<any[]>('/machines'),
+          apiClient.get<any>('/risk')
+        ]);
+        const risks = Array.isArray(riskResponse?.machines)
+          ? riskResponse.machines
+          : Array.isArray(riskResponse)
+            ? riskResponse
+            : [];
+
+        const rows = (Array.isArray(machines) ? machines : []).map((machine: any) => {
+          const risk = risks.find((item: any) => item.machine_id === machine.id) || {};
+          const riskScore = Number(risk.risk_score ?? machine.risk_score ?? 0);
+          const riskLevel = risk.risk_level || (
+            riskScore >= 75 ? 'CRITICAL' :
+            riskScore >= 50 ? 'HIGH' :
+            riskScore >= 25 ? 'MODERATE' : 'LOW'
+          );
+          return {
+            machine: {
+              id: machine.id,
+              name: machine.machine_name || machine.name || machine.id,
+              primaryDefectType: risk.defect_type || 'None'
+            },
+            risk: {
+              riskLevel,
+              riskScore,
+              signals: risk.contributing_signals || risk.signals || ['No elevated risk signal is available from recorded telemetry.'],
+              trend: 'LIVE BACKEND ASSESSMENT'
+            }
+          };
+        });
+
+        if (mounted) setMachineRisks(rows);
+      } catch (err) {
+        if (mounted) setError(err instanceof Error ? err.message : 'Unable to load live risk data.');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadRiskData();
+    return () => { mounted = false; };
+  }, []);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -26,8 +73,29 @@ export const RiskMonitorPage: React.FC<RiskMonitorPageProps> = ({ onNavigate }) 
         if (idx === 6) onNavigate('root-cause');
       }} />
 
-      <DemoBanner message="DEFECT RISK MONITOR — Controlled Heuristic Predictive Risk Matrix" />
+      <DemoBanner message="DEFECT RISK MONITOR — Live Backend Risk Assessment from Recorded Telemetry & Inspection History" />
 
+      {loading && (
+        <div className="scada-card">
+          <span className="scada-label">LOADING LIVE RISK ASSESSMENTS...</span>
+        </div>
+      )}
+
+      {!loading && error && (
+        <div className="scada-card" style={{ borderLeft: '4px solid #E55353' }}>
+          <span className="scada-label" style={{ color: '#E55353' }}>RISK DATA UNAVAILABLE</span>
+          <p style={{ color: '#8D9AAA', marginBottom: 0 }}>{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && machineRisks.length === 0 && (
+        <div className="scada-card">
+          <span className="scada-label">NO MACHINE RISK RECORDS</span>
+          <p style={{ color: '#8D9AAA', marginBottom: 0 }}>No machine telemetry or inspection records are currently available for risk assessment.</p>
+        </div>
+      )}
+
+      {!loading && !error && (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem' }}>
         {machineRisks.map(({ machine, risk }) => (
           <div
@@ -116,6 +184,7 @@ export const RiskMonitorPage: React.FC<RiskMonitorPageProps> = ({ onNavigate }) 
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 };
