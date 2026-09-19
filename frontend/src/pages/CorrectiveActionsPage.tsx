@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { inspectionService } from '../services/inspectionService';
+import { apiClient } from '../services/apiClient';
 import { WorkflowStepper } from '../components/workflow/WorkflowStepper';
 import { DemoBanner } from '../components/common/DemoBanner';
 import { Badge } from '../components/common/Badge';
@@ -16,117 +17,91 @@ export const CorrectiveActionsPage: React.FC<CorrectiveActionsPageProps> = ({ on
   const [actions, setActions] = useState<any[]>([]);
   const [activeAction, setActiveAction] = useState<any | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [techNotes, setTechNotes] = useState<string>('Spindle alignment and dampener pad recalibration performed according to spec.');
+  const [techNotes, setTechNotes] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
 
   const fetchActions = async () => {
     try {
+      setError(null);
       const data = await inspectionService.getCorrectiveActionsAsync();
-      if (data && data.length > 0) {
-        setActions(data);
-        const matched = inspectionId ? data.find((a: any) => a.inspection_id === inspectionId) : data[0];
-        setActiveAction(matched || data[0]);
-      } else {
-        // Fallback default demo action
-        const defaultAction = {
-          id: 'CA-2026-0842',
-          inspection_id: 'INSP-2026-0842',
-          machine_id: 'M03',
-          probable_factor: 'Elevated M03 Vibration Baseline',
-          action_description: 'Perform spindle bearing alignment & dampener recalibration on M03',
-          recommended_actions: [
-            'Inspect M03 vibration dampeners and spindle mountings',
-            'Check tool chuck wear and mechanical alignment',
-            'Perform dynamic spindle balancing adjustment',
-            'Verify affected batch tolerances and reinspect subsequent products'
-          ],
-          priority: 'HIGH',
-          status: 'Open',
-          assigned_to: 'Sarah Chen (Lead Tech)',
-          created_at: new Date().toISOString(),
-          before_snapshot: {
-            machine_id: 'M03',
-            temperature: 72.0,
-            vibration: 4.8,
-            pressure: 6.2,
-            speed: 1480,
-            risk_level: 'HIGH',
-            defect_rate: 8.71
-          }
-        };
-        setActions([defaultAction]);
-        setActiveAction(defaultAction);
+      const rows = Array.isArray(data) ? data : [];
+      setActions(rows);
+      const matched = inspectionId ? rows.find((a: any) => a.inspection_id === inspectionId) : rows[0];
+      setActiveAction(matched || null);
+      if (!matched && inspectionId) {
+        setError('No corrective action exists for this inspection yet. Create one from the evidence-backed inspection record.');
       }
     } catch (e) {
       console.error(e);
+      setError(e instanceof Error ? e.message : 'Unable to load corrective actions from the backend.');
+      setActions([]);
+      setActiveAction(null);
     }
   };
-
   useEffect(() => {
     fetchActions();
   }, []);
 
-  const handleStartAction = async () => {
-    if (!activeAction) return;
+  const handleCreateAction = async () => {
+    if (!inspectionId) return;
     setIsProcessing(true);
+    setError(null);
     try {
-      const updated = await inspectionService.startCorrectiveActionAsync(activeAction.id, 'Technician dispatched to station M03.');
-      setActiveAction(updated);
-      setActions(prev => prev.map(a => a.id === updated.id ? updated : a));
+      const inspection = await apiClient.get<any>(`/inspections/${inspectionId}`);
+      const rootCause = await apiClient.get<any>(`/root-cause/${inspectionId}`);
+      const created = await inspectionService.createCorrectiveActionAsync({
+        inspection_id: inspectionId,
+        machine_id: inspection.machine_id,
+        action_description: `Investigate and correct the production condition associated with inspection ${inspectionId}`,
+        priority: 'HIGH',
+        assigned_to: 'Operator / Maintenance Tech',
+        probable_factor: rootCause?.probable_factor,
+        notes: 'Created from the inspection record and evidence-backed probable-cause analysis.'
+      });
+      setActions([created]);
+      setActiveAction(created);
+      setError(null);
     } catch (e) {
       console.error(e);
-      // Fallback local update
-      const updated = {
-        ...activeAction,
-        status: 'In Progress',
-        started_at: new Date().toISOString(),
-        before_snapshot: activeAction.before_snapshot || {
-          machine_id: activeAction.machine_id || 'M03',
-          temperature: 72.0,
-          vibration: 4.8,
-          pressure: 6.2,
-          speed: 1480,
-          risk_level: 'HIGH',
-          defect_rate: 8.71
-        }
-      };
-      setActiveAction(updated);
-      setActions(prev => prev.map(a => a.id === updated.id ? updated : a));
+      setError(e instanceof Error ? e.message : 'Unable to create corrective action from the inspection evidence.');
     } finally {
       setIsProcessing(false);
     }
   };
 
+  const handleStartAction = async () => {
+    if (!activeAction) return;
+    setIsProcessing(true);
+    setError(null);
+    try {
+      const updated = await inspectionService.startCorrectiveActionAsync(
+        activeAction.id,
+        techNotes || 'Technician dispatched for evidence-backed corrective maintenance.'
+      );
+      setActiveAction(updated);
+      setActions(prev => prev.map(a => a.id === updated.id ? updated : a));
+    } catch (e) {
+      console.error(e);
+      setError(e instanceof Error ? e.message : 'Unable to start corrective action. No local result was fabricated.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
   const handleCompleteAction = async () => {
     if (!activeAction) return;
     setIsProcessing(true);
+    setError(null);
     try {
       const updated = await inspectionService.completeCorrectiveActionAsync(activeAction.id, techNotes);
       setActiveAction(updated);
       setActions(prev => prev.map(a => a.id === updated.id ? updated : a));
     } catch (e) {
       console.error(e);
-      // Fallback local update
-      const updated = {
-        ...activeAction,
-        status: 'Completed',
-        completed_at: new Date().toISOString(),
-        after_snapshot: {
-          machine_id: activeAction.machine_id || 'M03',
-          temperature: 68.0,
-          vibration: 2.7,
-          pressure: 6.0,
-          speed: 1500,
-          risk_level: 'NORMAL',
-          defect_rate: 1.20
-        }
-      };
-      setActiveAction(updated);
-      setActions(prev => prev.map(a => a.id === updated.id ? updated : a));
+      setError(e instanceof Error ? e.message : 'Unable to complete corrective action. Fresh factory telemetry is required.');
     } finally {
       setIsProcessing(false);
     }
   };
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       {/* Workflow Stepper at Step 9 */}
@@ -135,7 +110,20 @@ export const CorrectiveActionsPage: React.FC<CorrectiveActionsPageProps> = ({ on
         if (idx === 6) onNavigate('root-cause');
       }} />
 
-      <DemoBanner message="PHASE 6: CORRECTIVE ACTION DISPATCH — Closed-Loop Production Intervention (SI-03)" />
+      <DemoBanner message="PHASE 6: CORRECTIVE ACTION DISPATCH — Evidence-Linked Production Intervention (SI-03)" />
+
+      {error && (
+        <div className="scada-card" style={{ borderLeft: '4px solid #E55353' }}>
+          <span className="scada-label" style={{ color: '#E55353' }}>ACTION STATUS</span>
+          <p style={{ color: '#8D9AAA', marginBottom: '0.75rem' }}>{error}</p>
+          {!activeAction && inspectionId && (
+            <button className="scada-btn scada-btn-primary" onClick={handleCreateAction} disabled={isProcessing}>
+              <Wrench size={14} />
+              {isProcessing ? 'CREATING ACTION...' : 'CREATE CORRECTIVE ACTION FROM INSPECTION'}
+            </button>
+          )}
+        </div>
+      )}
 
       {activeAction && (
         <div className="scada-card">
@@ -147,7 +135,7 @@ export const CorrectiveActionsPage: React.FC<CorrectiveActionsPageProps> = ({ on
                   CORRECTIVE ACTION DISPATCH: {activeAction.id}
                 </span>
                 <span style={{ display: 'block', fontSize: '0.75rem', color: '#8D9AAA' }}>
-                  Linked Defect Inspection: <strong style={{ color: '#4F7CAC' }}>{activeAction.inspection_id}</strong> | Machine: <strong style={{ color: '#E8EDF3' }}>{activeAction.machine_id || 'M03'}</strong>
+                  Linked Defect Inspection: <strong style={{ color: '#4F7CAC' }}>{activeAction.inspection_id}</strong> | Machine: <strong style={{ color: '#E8EDF3' }}>{activeAction.machine_id || 'N/A'}</strong>
                 </span>
               </div>
             </div>
@@ -188,7 +176,7 @@ export const CorrectiveActionsPage: React.FC<CorrectiveActionsPageProps> = ({ on
               <div style={{ backgroundColor: '#0F1A2A', padding: '0.85rem', borderRadius: '4px', border: '1px solid #26364A', marginBottom: '1rem' }}>
                 <span className="scada-label" style={{ color: '#E55353' }}>PROBABLE CONTRIBUTING FACTOR</span>
                 <p style={{ fontSize: '0.95rem', fontWeight: 600, color: '#E8EDF3', margin: '0.3rem 0 0 0' }}>
-                  {activeAction.probable_factor || 'Elevated M03 Vibration Baseline'}
+                  {activeAction.probable_factor || 'No probable factor recorded'}
                 </p>
                 <span style={{ fontSize: '0.75rem', color: '#8D9AAA' }}>
                   Identified via non-causal multi-signal association analysis.
