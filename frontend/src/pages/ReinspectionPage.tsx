@@ -16,8 +16,8 @@ interface ReinspectionPageProps {
 
 export const ReinspectionPage: React.FC<ReinspectionPageProps> = ({ onNavigate, inspectionId, actionId }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>('/uploads/inspections/raw/sample_pass_01.jpg');
-  const [simulateDefect, setSimulateDefect] = useState<boolean>(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [reinspectionResult, setReinspectionResult] = useState<any | null>(null);
   const [activeAction, setActiveAction] = useState<any | null>(null);
@@ -58,16 +58,26 @@ export const ReinspectionPage: React.FC<ReinspectionPageProps> = ({ onNavigate, 
   };
 
   const handleRunReinspection = async () => {
+    setError(null);
+
+    if (!selectedFile) {
+      setError('Upload the actual post-maintenance product image before running reinspection.');
+      return;
+    }
+    if (!activeInspection?.id) {
+      setError('No original inspection is selected. Reinspection cannot be linked to a production record.');
+      return;
+    }
+
     setIsProcessing(true);
     try {
       const formData = new FormData();
-      if (selectedFile) {
-        formData.append('image', selectedFile);
+      formData.append('image', selectedFile);
+      formData.append('original_inspection_id', activeInspection.id);
+      if (activeAction?.id) {
+        formData.append('corrective_action_id', activeAction.id);
       }
-      formData.append('original_inspection_id', activeInspection?.id || 'INSP-2026-0842');
-      formData.append('corrective_action_id', activeAction?.id || 'CA-2026-0842');
-      formData.append('machine_id', activeAction?.machine_id || 'M03');
-      formData.append('simulate_defect', simulateDefect ? 'true' : 'false');
+      formData.append('machine_id', activeAction?.machine_id || activeInspection.machineId);
 
       const response = await inspectionService.analyzeAndReinspectAsync(formData);
       setReinspectionResult(response.reinspection);
@@ -75,40 +85,8 @@ export const ReinspectionPage: React.FC<ReinspectionPageProps> = ({ onNavigate, 
         setPreviewUrl(response.reinspection.image_path);
       }
     } catch (e) {
-      console.error('API reinspection error, using deterministic local evaluation', e);
-      // Fallback deterministic evaluation
-      const status = simulateDefect ? 'DEFECTIVE' : 'PASSED';
-      const isVerified = !simulateDefect;
-      const fallbackResult = {
-        id: `REINSP-2026-${Math.random().toString(16).substring(2, 6).toUpperCase()}`,
-        original_inspection_id: activeInspection?.id || 'INSP-2026-0842',
-        corrective_action_id: activeAction?.id || 'CA-2026-0842',
-        product_id: 'P1042-087',
-        machine_id: 'M03',
-        status: status,
-        overall_confidence: simulateDefect ? 0.91 : 0.98,
-        verification_status: isVerified ? 'VERIFIED' : 'REQUIRES FURTHER INVESTIGATION',
-        verification_notes: isVerified
-          ? 'Corrective action was followed by a successful reinspection. Machine parameters returned to configured normal range. | Follow-up: Continue monitoring M03.'
-          : 'Reinspection vision analysis detected defects; Machine vibration remains elevated above threshold. | Follow-up: Perform in-depth mechanical diagnostics on M03.',
-        before_condition: {
-          vibration: '4.8 mm/s',
-          temperature: '72°C',
-          risk: 'HIGH',
-          defect: 'Scratch',
-          severity: 'Medium',
-          status: 'DEFECTIVE'
-        },
-        after_condition: {
-          vibration: isVerified ? '2.7 mm/s' : '4.8 mm/s',
-          temperature: isVerified ? '68°C' : '72°C',
-          risk: isVerified ? 'NORMAL' : 'HIGH',
-          defect: simulateDefect ? 'Scratch' : 'None',
-          severity: simulateDefect ? 'Medium' : 'None',
-          status: status
-        }
-      };
-      setReinspectionResult(fallbackResult);
+      console.error('Reinspection API error', e);
+      setError(e instanceof Error ? e.message : 'Reinspection analysis failed. No result was recorded.');
     } finally {
       setIsProcessing(false);
     }
@@ -141,10 +119,10 @@ export const ReinspectionPage: React.FC<ReinspectionPageProps> = ({ onNavigate, 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
             <div style={{ backgroundColor: '#0B1220', padding: '0.75rem', borderRadius: '4px', border: '1px solid #26364A', fontSize: '0.8rem' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', color: '#8D9AAA' }}>
-                <div>Original Insp: <strong style={{ color: '#4F7CAC' }}>{activeInspection?.id || 'INSP-2026-0842'}</strong></div>
-                <div>Action ID: <strong style={{ color: '#4F7CAC' }}>{activeAction?.id || 'CA-2026-0842'}</strong></div>
-                <div>Product: <strong style={{ color: '#E8EDF3' }}>P1042-087</strong></div>
-                <div>Station: <strong style={{ color: '#E8EDF3' }}>{activeAction?.machine_id || 'M03'}</strong></div>
+                <div>Original Insp: <strong style={{ color: '#4F7CAC' }}>{activeInspection?.id || 'N/A'}</strong></div>
+                <div>Action ID: <strong style={{ color: '#4F7CAC' }}>{activeAction?.id || 'N/A'}</strong></div>
+                <div>Product: <strong style={{ color: '#E8EDF3' }}>{activeInspection?.productId || 'N/A'}</strong></div>
+                <div>Station: <strong style={{ color: '#E8EDF3' }}>{activeAction?.machine_id || activeInspection?.machineId || 'N/A'}</strong></div>
               </div>
             </div>
 
@@ -160,60 +138,22 @@ export const ReinspectionPage: React.FC<ReinspectionPageProps> = ({ onNavigate, 
               alignItems: 'center',
               gap: '0.5rem'
             }}>
-              <img
-                src={previewUrl}
-                alt="Reinspection Target"
-                style={{ maxHeight: '140px', maxWidth: '100%', objectFit: 'contain', borderRadius: '4px', border: '1px solid #26364A' }}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/images/sample.jpg';
-                }}
-              />
+              {previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt="Reinspection Target"
+                  style={{ maxHeight: '140px', maxWidth: '100%', objectFit: 'contain', borderRadius: '4px', border: '1px solid #26364A' }}
+                />
+              ) : (
+                <div style={{ height: '140px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8D9AAA', fontSize: '0.8rem' }}>
+                  Upload the post-maintenance product image
+                </div>
+              )}
               <label style={{ cursor: 'pointer', fontSize: '0.75rem', color: '#4F7CAC', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 <UploadCloud size={14} />
-                <span>Upload New Product Image (Optional)</span>
+                <span>Upload Post-Maintenance Product Image (Required)</span>
                 <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
               </label>
-            </div>
-
-            {/* Trial Mode Selector */}
-            <div style={{ backgroundColor: '#162235', padding: '0.75rem', borderRadius: '4px', border: '1px solid #26364A' }}>
-              <span className="scada-label" style={{ color: '#F1C40F' }}>EVALUATION TRIAL SCENARIO</span>
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.4rem' }}>
-                <button
-                  onClick={() => setSimulateDefect(false)}
-                  style={{
-                    flex: 1,
-                    padding: '0.45rem',
-                    fontSize: '0.75rem',
-                    borderRadius: '4px',
-                    border: '1px solid',
-                    cursor: 'pointer',
-                    backgroundColor: !simulateDefect ? 'rgba(34, 160, 107, 0.2)' : 'transparent',
-                    borderColor: !simulateDefect ? '#22A06B' : '#26364A',
-                    color: !simulateDefect ? '#22A06B' : '#8D9AAA',
-                    fontWeight: !simulateDefect ? 700 : 400
-                  }}
-                >
-                  Pass Scenario (Normal)
-                </button>
-                <button
-                  onClick={() => setSimulateDefect(true)}
-                  style={{
-                    flex: 1,
-                    padding: '0.45rem',
-                    fontSize: '0.75rem',
-                    borderRadius: '4px',
-                    border: '1px solid',
-                    cursor: 'pointer',
-                    backgroundColor: simulateDefect ? 'rgba(229, 83, 83, 0.2)' : 'transparent',
-                    borderColor: simulateDefect ? '#E55353' : '#26364A',
-                    color: simulateDefect ? '#E55353' : '#8D9AAA',
-                    fontWeight: simulateDefect ? 700 : 400
-                  }}
-                >
-                  Fail Scenario (Investigation)
-                </button>
-              </div>
             </div>
 
             {/* Run Button */}
@@ -231,6 +171,13 @@ export const ReinspectionPage: React.FC<ReinspectionPageProps> = ({ onNavigate, 
 
         {/* Right: Verification Engine & Closed Loop Result */}
         {reinspectionResult && (
+          {error && (
+            <div className="scada-card" style={{ borderLeft: '4px solid #E55353', marginBottom: '1.25rem' }}>
+              <span className="scada-label" style={{ color: '#E55353' }}>REINSPECTION ERROR</span>
+              <p style={{ color: '#8D9AAA', marginBottom: 0 }}>{error}</p>
+            </div>
+          )}
+
           <div className="scada-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div>
               <div className="scada-header" style={{ display: 'flex', justifyContent: 'space-between' }}>
