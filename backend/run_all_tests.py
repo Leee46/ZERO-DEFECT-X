@@ -47,4 +47,4 @@ def main():
         backend_proc.terminate()
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
