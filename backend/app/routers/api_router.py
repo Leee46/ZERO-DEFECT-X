@@ -790,10 +790,13 @@ def get_risk(db: Session = Depends(get_db)):
     res = []
     for m in machines:
         calc = risk_engine.calculate_machine_risk(db, m.id)
+        latest_defect = db.query(Defect).join(Inspection).filter(
+            Inspection.machine_id == m.id
+        ).order_by(Inspection.inspection_time.desc()).first()
         res.append({
             "id": f"RISK-{m.id}",
             "machine_id": m.id,
-            "defect_type": "Scratch" if m.id == "M03" else "None",
+            "defect_type": latest_defect.defect_type if latest_defect else "None",
             "risk_score": calc["risk_score"],
             "risk_level": calc["risk_level"],
             "signals": calc["contributing_signals"],
