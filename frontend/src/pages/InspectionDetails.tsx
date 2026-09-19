@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { inspectionService } from '../services/inspectionService';
 import { apiClient } from '../services/apiClient';
 import { WorkflowStepper } from '../components/workflow/WorkflowStepper';
 import { VisionViewer } from '../components/inspection/VisionViewer';
