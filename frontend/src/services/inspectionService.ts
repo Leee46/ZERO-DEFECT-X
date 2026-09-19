@@ -1,13 +1,9 @@
 import type { Inspection } from '../types';
-import { INITIAL_INSPECTIONS } from '../data/mockData';
 import { visionService } from './visionService';
-import { rootCauseService } from './rootCauseService';
-import { machineService } from './machineService';
-import { riskService } from './riskService';
 import { apiClient } from './apiClient';
 
 class InspectionService {
-  private inspections: Inspection[] = [...INITIAL_INSPECTIONS];
+  private inspections: Inspection[] = [];
 
   public async getAllInspectionsAsync(): Promise<Inspection[]> {
     try {
@@ -59,7 +55,8 @@ class InspectionService {
         this.inspections = remoteInspections;
       }
     } catch (err) {
-      console.warn('Backend inspections API unavailable, using cached inspection records');
+      console.warn('Backend inspections API unavailable; no synthetic inspection records will be substituted.');
+      throw err;
     }
     return this.inspections;
   }
