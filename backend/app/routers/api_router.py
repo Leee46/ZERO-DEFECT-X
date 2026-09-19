@@ -980,7 +980,7 @@ def get_system_network_info():
         "primary_ip": primary_ip,
         "available_ips": ips,
         "frontend_port": 5173,
-        "backend_port": 8001,
+        "backend_port": 8000,
         "mobile_url": f"http://{primary_ip}:5173/mobile-inspection"
     }
 
