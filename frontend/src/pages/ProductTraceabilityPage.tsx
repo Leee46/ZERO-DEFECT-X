@@ -1,5 +1,5 @@
-import React from 'react';
-import { MOCK_TRACEABILITY } from '../data/mockData';
+import React, { useEffect, useState } from 'react';
+import { apiClient } from '../services/apiClient';
 import { DemoBanner } from '../components/common/DemoBanner';
 import { Badge } from '../components/common/Badge';
 import { GitPullRequest } from 'lucide-react';
@@ -9,7 +9,40 @@ interface ProductTraceabilityPageProps {
 }
 
 export const ProductTraceabilityPage: React.FC<ProductTraceabilityPageProps> = () => {
-  const record = MOCK_TRACEABILITY;
+  const [record, setRecord] = useState<any | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadTraceability = async () => {
+      try {
+        const inspections = await apiClient.get<any[]>('/inspections');
+        const latest = Array.isArray(inspections) ? inspections[0] : null;
+        if (!latest?.id) throw new Error('No inspection record is available for traceability.');
+        const data = await apiClient.get<any>(`/traceability/${latest.id}`);
+        setRecord(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unable to load product traceability.');
+      }
+    };
+    loadTraceability();
+  }, []);
+
+  if (error) {
+    return (
+      <div className="scada-card" style={{ borderLeft: '4px solid #E55353' }}>
+        <span className="scada-label" style={{ color: '#E55353' }}>TRACEABILITY UNAVAILABLE</span>
+        <p style={{ color: '#8D9AAA', marginBottom: 0 }}>{error}</p>
+      </div>
+    );
+  }
+
+  if (!record) {
+    return (
+      <div className="scada-card">
+        <span className="scada-label">LOADING PRODUCT TRACEABILITY...</span>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
