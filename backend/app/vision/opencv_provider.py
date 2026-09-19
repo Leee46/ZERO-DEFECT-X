@@ -83,7 +83,41 @@ class OpenCVVisionProvider(VisionProvider):
                     largest_object_ratio = max(largest_object_ratio, area / image_area)
 
             if largest_object_ratio < 0.05:
-                raise ValueError("IMAGE_NOT_ANALYZABLE: No clear foreground product/component was found. Upload a close, well-framed manufacturing component image.")
+                # Some legitimate component images (especially the development
+                # set) use a low-contrast plate where the component boundary is
+                # drawn as an internal outline rather than a filled region. In
+                # that case contour-area segmentation is intentionally weak.
+                # Fall back to structural evidence: a reasonably smooth image
+                # with multiple long internal edges is much more characteristic
+                # of a photographed/illustrated component than a UI screenshot.
+                central = gray[
+                    int(h * 0.10):int(h * 0.90),
+                    int(w * 0.10):int(w * 0.90)
+                ]
+                central_edges = cv2.Canny(central, 50, 150)
+                edge_density = float(np.mean(central_edges > 0))
+                lines = cv2.HoughLinesP(
+                    central_edges,
+                    1,
+                    np.pi / 180,
+                    threshold=max(30, int(min(central.shape) * 0.12)),
+                    minLineLength=max(50, int(min(central.shape) * 0.25)),
+                    maxLineGap=max(8, int(min(central.shape) * 0.03))
+                )
+                long_lines = 0
+                if lines is not None:
+                    for line in lines[:, 0]:
+                        x1, y1, x2, y2 = [int(v) for v in line]
+                        length = float(np.hypot(x2 - x1, y2 - y1))
+                        if length >= min(central.shape) * 0.25:
+                            long_lines += 1
+
+                structural_component = (
+                    0.005 <= edge_density <= 0.035 and
+                    long_lines >= 2
+                )
+                if not structural_component:
+                    raise ValueError("IMAGE_NOT_ANALYZABLE: No clear foreground product/component was found. Upload a close, well-framed manufacturing component image.")
 
             # 3. Preprocess
             resized_bgr, blurred_gray, scale = Preprocessor.preprocess_for_detection(raw_bgr)
