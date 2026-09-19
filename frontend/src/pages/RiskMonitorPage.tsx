@@ -148,7 +148,7 @@ export const RiskMonitorPage: React.FC<RiskMonitorPageProps> = ({ onNavigate }) 
               <div>
                 <span className="scada-label" style={{ marginBottom: '0.4rem' }}>CONTRIBUTING SIGNALS</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                  {risk.signals.map((sig, idx) => (
+                  {(risk.signals as string[]).map((sig: string, idx: number) => (
                     <div
                       key={idx}
                       style={{
