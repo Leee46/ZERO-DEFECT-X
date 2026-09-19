@@ -103,7 +103,7 @@ class CorrectiveActionService:
             id=act_id,
             inspection_id=inspection_id,
             machine_id=m_id,
-            probable_factor=probable_factor or "Elevated Vibration / Tool Wear",
+            probable_factor=probable_factor or "No probable factor recorded; manual engineering review required",
             action_description=desc,
             recommended_actions=recommended_actions,
             priority=priority,
