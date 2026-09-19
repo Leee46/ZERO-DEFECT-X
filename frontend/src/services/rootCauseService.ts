@@ -1,87 +1,67 @@
 import type { Inspection, Machine, RootCauseResult, FactorBreakdown } from '../types';
 
+/**
+ * Legacy synchronous client-side helper.
+ *
+ * Production screens use /api/root-cause/{inspection_id}, which has access to
+ * synchronized telemetry and historical inspection records. This helper is
+ * retained only for compatibility and deliberately does not invent historical
+ * correlations, material certifications, operator compliance, or fixed scores.
+ */
 export class RootCauseService {
-  /**
-   * Deterministic rule-based scoring mechanism to identify probable contributing factors.
-   */
   public analyzeRootCause(inspection: Inspection, machine: Machine): RootCauseResult {
     const factors: FactorBreakdown[] = [];
     const evidencePoints: string[] = [];
 
-    const primaryDefect = inspection.defects[0]?.type || 'Normal';
-    const currentVib = inspection.parameters.vibration;
+    const currentVib = inspection.parameters?.vibration;
     const baseVib = machine.baselineVibration;
-    const currentTemp = inspection.parameters.temperature;
+    const currentTemp = inspection.parameters?.temperature;
     const baseTemp = machine.baselineTemp;
 
-    // 1. Vibration Factor Scoring
-    const vibRatio = currentVib / baseVib;
-    let vibScore = 0.1;
-    if (vibRatio > 2.0) {
-      vibScore = 0.84;
-      evidencePoints.push(`Current vibration (${currentVib} mm/s) exceeds normal baseline (${baseVib} mm/s) by +${Math.round((vibRatio - 1) * 100)}%.`);
-    } else if (vibRatio > 1.3) {
-      vibScore = 0.55;
-      evidencePoints.push(`Moderate vibration elevation observed (${currentVib} mm/s vs baseline ${baseVib} mm/s).`);
+    if (typeof currentVib === 'number' && typeof baseVib === 'number' && baseVib > 0) {
+      const ratio = currentVib / baseVib;
+      const score = Math.min(0.95, Math.max(0, (ratio - 1) / 2));
+      if (currentVib > baseVib) {
+        evidencePoints.push(
+          `Recorded vibration (${currentVib} mm/s) is above the configured machine baseline (${baseVib} mm/s).`
+        );
+      }
+      factors.push({
+        factor: 'Machine Vibration Deviation',
+        score,
+        details: `${currentVib} mm/s recorded vs ${baseVib} mm/s configured baseline`,
+        isPrimary: score >= 0.5
+      });
     }
 
-    factors.push({
-      factor: 'Machine Vibration Anomaly',
-      score: vibScore,
-      details: `${currentVib} mm/s recorded (Baseline: ${baseVib} mm/s)`,
-      isPrimary: vibScore > 0.6
-    });
-
-    // 2. Temperature Factor Scoring
-    const tempRatio = currentTemp / baseTemp;
-    let tempScore = 0.1;
-    if (tempRatio > 1.12) {
-      tempScore = 0.38;
-      evidencePoints.push(`Thermal level (${currentTemp}°C) is elevated +${Math.round((tempRatio - 1) * 100)}% above normal operating temperature (${baseTemp}°C).`);
-    }
-    factors.push({
-      factor: 'Thermal Deviation',
-      score: tempScore,
-      details: `${currentTemp}°C recorded (Baseline: ${baseTemp}°C)`
-    });
-
-    // 3. Machine Specific Defect Pattern Association
-    if (machine.id === 'M03' && primaryDefect === 'Scratch') {
-      evidencePoints.push(`Historical pattern: Machine ${machine.id} exhibits a 78% historical correlation between elevated vibration and Scratch occurrences.`);
+    if (typeof currentTemp === 'number' && typeof baseTemp === 'number' && baseTemp > 0) {
+      const ratio = currentTemp / baseTemp;
+      const score = Math.min(0.80, Math.max(0, (ratio - 1) / 2));
+      if (currentTemp > baseTemp) {
+        evidencePoints.push(
+          `Recorded temperature (${currentTemp}°C) is above the configured machine baseline (${baseTemp}°C).`
+        );
+      }
+      factors.push({
+        factor: 'Temperature Deviation',
+        score,
+        details: `${currentTemp}°C recorded vs ${baseTemp}°C configured baseline`
+      });
     }
 
-    // 4. Batch & Shift Factors
-    factors.push({
-      factor: 'Batch Material Specification',
-      score: 0.18,
-      details: `Batch ${inspection.batchId} hardness within standard ISO spec`
-    });
-
-    factors.push({
-      factor: 'Shift / Operator Protocol',
-      score: 0.12,
-      details: `${inspection.shift} operator compliance verified`
-    });
-
-    // Determine primary probable contributing factor based on highest score
     factors.sort((a, b) => b.score - a.score);
     const topFactor = factors[0];
-    const evidenceScore = Math.round(topFactor.score * 100);
-
-    let probableFactor = 'No significant parameter deviation detected';
-    if (topFactor.score > 0.6) {
-      probableFactor = `Elevated Machine Vibration on Station ${machine.id}`;
-    } else if (topFactor.score > 0.4) {
-      probableFactor = `Thermal Elevation & Tool Expansion on Station ${machine.id}`;
-    }
+    const probableFactor = topFactor
+      ? topFactor.factor
+      : 'Insufficient client-side telemetry evidence';
 
     return {
       probableFactor,
-      evidenceScore,
+      evidenceScore: topFactor ? Math.round(topFactor.score * 100) : 0,
       factors,
       evidencePoints,
-      disclaimer: 'Probable contributing factors represent statistical associations based on parameter baseline deviations. Physical inspection and verification required.',
-      analyzedAt: new Date().toISOString().replace('T', ' ').substring(0, 19)
+      disclaimer: 'Client-side baseline comparison only. Production probable-cause analysis is provided by the backend using synchronized telemetry and historical inspection records.',
+      analyzedAt: new Date().toISOString()
     };
   }
 }
