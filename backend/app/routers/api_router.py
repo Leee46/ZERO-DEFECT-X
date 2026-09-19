@@ -49,7 +49,7 @@ async def analyze_uploaded_image(
         )
 
     # Sanitize filename & save raw file
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     raw_dir = os.path.join(base_dir, "uploads", "inspections", "raw")
     os.makedirs(raw_dir, exist_ok=True)
 
@@ -894,7 +894,7 @@ async def analyze_and_reinspect(
     """
     rel_raw_url = None
     if image and image.filename:
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         raw_dir = os.path.join(base_dir, "uploads", "reinspections")
         os.makedirs(raw_dir, exist_ok=True)
         ext = os.path.splitext(image.filename)[1].lower() or ".jpg"
