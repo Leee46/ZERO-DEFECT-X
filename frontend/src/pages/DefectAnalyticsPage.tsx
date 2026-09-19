@@ -55,28 +55,15 @@ export const DefectAnalyticsPage: React.FC<DefectAnalyticsPageProps> = () => {
 
   const vibrationCorrelationData = (analyticsData?.vibration_correlation || []).map((row: any) => ({
     vibration: Number(row.vibration),
-    scratches: Number(row.defects || row.scratch_defects || 0)
+    scratches: Number(row.defects || 0),
+    sampleCount: Number(row.sample_count || 0)
   }));
 
   const tempCorrelationData = (analyticsData?.temperature_correlation || []).map((row: any) => ({
-    temp: Number(row.temperature ?? row.temp),
-    defects: Number(row.defects || 0)
+    temp: Number(row.temperature),
+    defects: Number(row.defects || 0),
+    sampleCount: Number(row.sample_count || 0)
   }));
-
-  const vibrationCorrelationData = [
-    { vibration: 1.8, scratches: 0 },
-    { vibration: 2.1, scratches: 1 },
-    { vibration: 2.3, scratches: 2 },
-    { vibration: 3.6, scratches: 12 },
-    { vibration: 4.8, scratches: 27 }
-  ];
-
-  const tempCorrelationData = [
-    { temp: 64.2, defects: 1 },
-    { temp: 68.5, defects: 2 },
-    { temp: 74.2, defects: 14 },
-    { temp: 78.4, defects: 27 }
-  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
