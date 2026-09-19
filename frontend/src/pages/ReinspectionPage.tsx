@@ -26,7 +26,6 @@ export const ReinspectionPage: React.FC<ReinspectionPageProps> = ({ onNavigate, 
   useEffect(() => {
     const initData = async () => {
       try {
-        const actions = await inspectionService.getCorrectiveActionsAsync();
         if (!inspectionId) {
           throw new Error('An original inspection ID is required to start a reinspection.');
         }
