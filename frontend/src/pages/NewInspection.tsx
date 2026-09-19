@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SAMPLE_PRODUCTS } from '../data/mockData';
 import { inspectionService } from '../services/inspectionService';
-import { apiClient } from '../services/apiClient';
+import { apiClient, getApiBaseUrl } from '../services/apiClient';
 import { WorkflowStepper } from '../components/workflow/WorkflowStepper';
 import { DemoBanner } from '../components/common/DemoBanner';
 import { QrCodeDisplay } from '../components/common/QrCodeDisplay';
@@ -88,8 +88,8 @@ export const NewInspection: React.FC<NewInspectionProps> = ({ onNavigate }) => {
   const loadTestImage = async (filename: string) => {
     try {
       setErrorMessage(null);
-      const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-      const res = await fetch(`http://${host}:8000/static/demo_images/${filename}`);
+      const backendOrigin = getApiBaseUrl().replace(/\/api\/?$/, '');
+      const res = await fetch(`${backendOrigin}/static/demo_images/${filename}`);
       const blob = await res.blob();
       const file = new File([blob], filename, { type: 'image/jpeg' });
       processFile(file);
