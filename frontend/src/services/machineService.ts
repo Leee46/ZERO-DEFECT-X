@@ -1,37 +1,37 @@
 import type { Machine, SeverityLevel, MachineStatus } from '../types';
-import { INITIAL_MACHINES } from '../data/mockData';
 import { apiClient } from './apiClient';
 
 class MachineService {
-  private machines: Machine[] = [...INITIAL_MACHINES];
+  private machines: Machine[] = [];
 
   public async getAllMachinesAsync(): Promise<Machine[]> {
     try {
       const data = await apiClient.get<any[]>('/machines');
       if (Array.isArray(data) && data.length > 0) {
         return data.map((m) => {
-          const fallback = this.machines.find((x) => x.id === m.id) || this.machines[0];
+          const fallback = this.machines.find((x) => x.id === m.id);
           const riskLevel: SeverityLevel = m.risk_score >= 75 ? 'CRITICAL' : (m.risk_score >= 50 ? 'HIGH' : (m.risk_score >= 25 ? 'MEDIUM' : 'LOW'));
           const status: MachineStatus = m.status === 'WARNING' ? 'WARNING' : (m.status === 'FAULT' ? 'FAULT' : 'NORMAL');
           
           return {
-            ...fallback,
+            ...(fallback || {}),
             id: m.id,
-            name: m.machine_name || m.name || fallback.name,
+            name: m.machine_name || m.name || fallback?.name || m.id,
             status: status,
-            location: m.location || fallback.location,
-            currentTemp: m.temperature ?? m.currentTemp ?? fallback.currentTemp,
-            currentVibration: m.vibration ?? m.currentVibration ?? fallback.currentVibration,
-            currentPressure: m.pressure ?? m.currentPressure ?? fallback.currentPressure,
-            currentSpeed: m.speed ?? m.currentSpeed ?? fallback.currentSpeed,
-            defectRate: m.defect_rate ?? m.defectRate ?? fallback.defectRate,
+            location: m.location || fallback?.location || 'N/A',
+            currentTemp: m.temperature ?? m.currentTemp ?? fallback?.currentTemp ?? 0,
+            currentVibration: m.vibration ?? m.currentVibration ?? fallback?.currentVibration ?? 0,
+            currentPressure: m.pressure ?? m.currentPressure ?? fallback?.currentPressure ?? 0,
+            currentSpeed: m.speed ?? m.currentSpeed ?? fallback?.currentSpeed ?? 0,
+            defectRate: m.defect_rate ?? m.defectRate ?? fallback?.defectRate ?? 0,
             riskLevel: riskLevel,
-            riskScore: m.risk_score ?? m.riskScore ?? fallback.riskScore,
+            riskScore: m.risk_score ?? m.riskScore ?? fallback?.riskScore ?? 0,
           };
         });
       }
     } catch (err) {
-      console.warn('Backend unavailable, using initial machine data fallback');
+      console.warn('Backend machine API unavailable; no synthetic machine records will be substituted.');
+      throw err;
     }
     return this.machines;
   }
