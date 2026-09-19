@@ -105,7 +105,7 @@ export const RiskMonitorPage: React.FC<RiskMonitorPageProps> = ({ onNavigate }) 
               borderLeft: `4px solid ${
                 risk.riskLevel === 'HIGH' || risk.riskLevel === 'CRITICAL'
                   ? '#E55353'
-                  : risk.riskLevel === 'MEDIUM'
+                  : risk.riskLevel === 'MEDIUM' || risk.riskLevel === 'MODERATE'
                   ? '#D99A2B'
                   : '#22A06B'
               }`
