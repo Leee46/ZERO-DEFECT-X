@@ -204,6 +204,35 @@ async def analyze_uploaded_image(
     db.add(new_insp)
     db.flush()
 
+    # An unusable/irrelevant image is a terminal inspection outcome.
+    # Do not invent defects, root causes, or risk assessments for it.
+    if vision_result["status"] == "NOT_ANALYZABLE":
+        db.commit()
+        return {
+            "inspection_id": insp_id,
+            "product_id": product_id,
+            "batch_id": batch_id,
+            "machine_id": machine_id,
+            "shift_id": shift_id,
+            "image_source_label": "REAL PRODUCT IMAGE",
+            "factory_source_label": factory_source_label,
+            "factory_status": factory_status,
+            "engine": vision_result["engine"],
+            "status": "NOT_ANALYZABLE",
+            "overall_confidence": 0.0,
+            "anomaly_score": 0.0,
+            "severity": "LOW",
+            "severity_reason": vision_result.get("not_analyzable_reason", vision_result.get("severity_reason")),
+            "location": "N/A",
+            "raw_image_url": rel_raw_url,
+            "annotated_image_url": None,
+            "defects": [],
+            "telemetry": telemetry_data or {"status": "UNAVAILABLE", "message": "Virtual Factory telemetry unavailable."},
+            "environment": environment_data or {"status": "UNAVAILABLE", "message": "Virtual Factory environment data unavailable."},
+            "root_cause": None,
+            "disclaimer": vision_result["disclaimer"]
+        }
+
     # Save Defect DB records
     saved_defects = []
     for item in vision_result.get("defects", []):
