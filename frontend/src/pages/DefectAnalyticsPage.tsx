@@ -24,6 +24,7 @@ interface DefectAnalyticsPageProps {
 export const DefectAnalyticsPage: React.FC<DefectAnalyticsPageProps> = () => {
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchAnalytics = async () => {
     setIsLoading(true);
@@ -31,7 +32,9 @@ export const DefectAnalyticsPage: React.FC<DefectAnalyticsPageProps> = () => {
       const data = await apiClient.get<any>('/analytics/defects');
       setAnalyticsData(data);
     } catch (err) {
-      console.warn('Analytics API unavailable, using cached analytics data');
+      console.warn('Analytics API unavailable; no synthetic analytics will be substituted.');
+      setError(err instanceof Error ? err.message : 'Unable to load live defect analytics.');
+      setAnalyticsData(null);
     }
     setIsLoading(false);
   };
@@ -40,27 +43,25 @@ export const DefectAnalyticsPage: React.FC<DefectAnalyticsPageProps> = () => {
     fetchAnalytics();
   }, []);
 
-  const machineData = analyticsData?.machine_breakdown?.map((m: any) => ({
+  const machineData = (analyticsData?.machine_breakdown || []).map((m: any) => ({
     name: m.machine,
-    rate: m.defect_rate
-  })) || [
-    { name: 'M01', rate: 0.95 },
-    { name: 'M02', rate: 1.58 },
-    { name: 'M03', rate: 8.71 },
-    { name: 'M04', rate: 0.45 }
-  ];
+    rate: Number(m.defect_rate || 0)
+  }));
 
-  const COLORS = ['#E55353', '#D99A2B', '#F59E0B', '#3B82F6', '#22A06B'];
-  const defectTypeData = analyticsData?.defect_distribution?.map((d: any, idx: number) => ({
+  const defectTypeData = (analyticsData?.defect_distribution || []).map((d: any) => ({
     name: d.type,
-    value: d.count,
-    color: COLORS[idx % COLORS.length]
-  })) || [
-    { name: 'Scratch', value: 27, color: '#E55353' },
-    { name: 'Surface Defect', value: 6, color: '#D99A2B' },
-    { name: 'Crack', value: 3, color: '#F59E0B' },
-    { name: 'Dent', value: 1, color: '#3B82F6' }
-  ];
+    value: Number(d.count || 0)
+  }));
+
+  const vibrationCorrelationData = (analyticsData?.vibration_correlation || []).map((row: any) => ({
+    vibration: Number(row.vibration),
+    scratches: Number(row.defects || row.scratch_defects || 0)
+  }));
+
+  const tempCorrelationData = (analyticsData?.temperature_correlation || []).map((row: any) => ({
+    temp: Number(row.temperature ?? row.temp),
+    defects: Number(row.defects || 0)
+  }));
 
   const vibrationCorrelationData = [
     { vibration: 1.8, scratches: 0 },
@@ -81,14 +82,21 @@ export const DefectAnalyticsPage: React.FC<DefectAnalyticsPageProps> = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       <DemoBanner message="DEFECT ANALYTICS HUB — Live PostgreSQL / SQLite Database Telemetry Analytics" />
 
+      {error && (
+        <div className="scada-card" style={{ borderLeft: '4px solid #E55353' }}>
+          <span className="scada-label" style={{ color: '#E55353' }}>ANALYTICS DATA UNAVAILABLE</span>
+          <p style={{ color: '#8D9AAA', marginBottom: 0 }}>{error}</p>
+        </div>
+      )}
+
       {/* Top Controls Banner */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#121C2C', padding: '0.75rem 1rem', borderRadius: '4px', border: '1px solid #26364A' }}>
         <div>
           <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#E8EDF3' }}>
-            TOTAL INSPECTIONS: {analyticsData?.total_inspected || 14} | DEFECTIVE UNITS: {analyticsData?.defective_units || 3}
+            TOTAL INSPECTIONS: {analyticsData?.total_inspected ?? 0} | DEFECTIVE UNITS: {analyticsData?.defective_units ?? 0}
           </span>
           <span style={{ fontSize: '0.75rem', color: '#8D9AAA', display: 'block', marginTop: '2px' }}>
-            OVERALL PLANT DEFECT RATE: <strong style={{ color: '#E55353' }}>{analyticsData?.defect_rate || 21.43}%</strong>
+            OVERALL PLANT DEFECT RATE: <strong style={{ color: '#E55353' }}>{analyticsData?.defect_rate ?? 0}%</strong>
           </span>
         </div>
         <button className="scada-btn scada-btn-secondary scada-btn-sm" onClick={fetchAnalytics} disabled={isLoading}>
