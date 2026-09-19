@@ -509,14 +509,40 @@ def get_inspection(inspection_id: str, db: Session = Depends(get_db)):
 
     # Rehydrate the production context saved at inspection time so the detail
     # page does not lose telemetry after navigating away from the upload response.
-    param = db.query(MachineParameter).filter(
+    # Use the telemetry nearest to this inspection, not simply the latest
+    # machine reading. This preserves the production state that existed when
+    # the product was inspected.
+    params = db.query(MachineParameter).filter(
         MachineParameter.machine_id == insp.machine_id
-    ).order_by(
-        MachineParameter.timestamp.desc()
-    ).first()
-    env = db.query(EnvironmentReading).order_by(
-        EnvironmentReading.timestamp.desc()
-    ).first()
+    ).all()
+
+    def time_distance(item_timestamp, target_timestamp):
+        if not item_timestamp or not target_timestamp:
+            return float("inf")
+        item_ts = item_timestamp
+        target_ts = target_timestamp
+        if item_ts.tzinfo is None and target_ts.tzinfo is not None:
+            item_ts = item_ts.replace(tzinfo=target_ts.tzinfo)
+        elif item_ts.tzinfo is not None and target_ts.tzinfo is None:
+            target_ts = target_ts.replace(tzinfo=item_ts.tzinfo)
+        return abs((item_ts - target_ts).total_seconds())
+
+    param = min(
+        params,
+        key=lambda row: time_distance(row.timestamp, insp.inspection_time),
+        default=None
+    )
+    if param and time_distance(param.timestamp, insp.inspection_time) > 6 * 60 * 60:
+        param = None
+
+    environments = db.query(EnvironmentReading).all()
+    env = min(
+        environments,
+        key=lambda row: time_distance(row.timestamp, insp.inspection_time),
+        default=None
+    )
+    if env and time_distance(env.timestamp, insp.inspection_time) > 6 * 60 * 60:
+        env = None
 
     payload = {
         "id": insp.id,
