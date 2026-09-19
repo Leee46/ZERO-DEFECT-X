@@ -70,7 +70,7 @@ export const DefectSummaryCard: React.FC<DefectSummaryCardProps> = ({ inspection
               <span style={{ fontSize: '1rem', fontWeight: 700, color: '#4F7CAC', fontFamily: 'var(--font-mono)' }}>
                 {typeof primaryDefect.confidence === 'number'
                   ? (primaryDefect.confidence > 1 ? primaryDefect.confidence.toFixed(1) : (primaryDefect.confidence * 100).toFixed(1))
-                  : '88.5'}%
+                  : 'N/A'}%
               </span>
             </div>
           </div>
