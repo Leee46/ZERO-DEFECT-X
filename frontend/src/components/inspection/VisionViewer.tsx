@@ -8,7 +8,7 @@ interface VisionViewerProps {
   imageUrl: string;
   annotatedImageUrl?: string;
   defects: DefectItem[];
-  status: 'PASS' | 'DEFECTIVE';
+  status: 'PASS' | 'DEFECTIVE' | 'NOT_ANALYZABLE';
   modelProvider?: string;
   confidence?: number;
 }
