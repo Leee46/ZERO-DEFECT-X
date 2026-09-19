@@ -19,7 +19,7 @@ export const VisionViewer: React.FC<VisionViewerProps> = ({
   defects,
   status,
   modelProvider = 'OpenCV Anomaly Detector (Development-stage computer vision)',
-  confidence = 84
+  confidence
 }) => {
   const [showAnnotated, setShowAnnotated] = useState<boolean>(false);
   const [imageError, setImageError] = useState<boolean>(false);
