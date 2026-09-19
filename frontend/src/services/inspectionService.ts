@@ -54,10 +54,9 @@ class InspectionService {
           };
         });
 
-        // Merge remote inspections with local ones avoiding duplicates
-        const existingIds = new Set(remoteInspections.map((i) => i.id));
-        const localOnly = this.inspections.filter((i) => !existingIds.has(i.id));
-        this.inspections = [...remoteInspections, ...localOnly];
+        // Backend records are authoritative for the production workflow.
+        // Do not append local demo records to live inspection history.
+        this.inspections = remoteInspections;
       }
     } catch (err) {
       console.warn('Backend inspections API unavailable, using cached inspection records');
