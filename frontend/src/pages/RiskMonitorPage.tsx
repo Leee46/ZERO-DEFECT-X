@@ -117,7 +117,7 @@ export const RiskMonitorPage: React.FC<RiskMonitorPageProps> = ({ onNavigate }) 
                   size={18}
                   style={{
                     color:
-                      risk.riskLevel === 'HIGH' ? '#E55353' : risk.riskLevel === 'MEDIUM' ? '#D99A2B' : '#22A06B'
+                      risk.riskLevel === 'HIGH' || risk.riskLevel === 'CRITICAL' ? '#E55353' : risk.riskLevel === 'MEDIUM' || risk.riskLevel === 'MODERATE' ? '#D99A2B' : '#22A06B'
                   }}
                 />
                 <span className="font-mono text-base font-bold text-text-primary">
