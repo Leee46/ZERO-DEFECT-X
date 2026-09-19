@@ -57,12 +57,12 @@ export const BatchesPage: React.FC = () => {
                 return (
                   <tr key={b.id}>
                     <td className="font-mono" style={{ color: '#4F7CAC', fontWeight: 600 }}>{b.id}</td>
-                    <td className="font-mono">{b.productId}</td>
-                    <td className="font-mono">{b.machineId}</td>
-                    <td className="font-mono">{b.shift}</td>
+                    <td className="font-mono">{b.product_id || 'N/A'}</td>
+                    <td className="font-mono">{b.machine_id || 'N/A'}</td>
+                    <td className="font-mono">{b.shift_id || 'N/A'}</td>
                     <td className="font-mono">{producedQuantity || 'N/A'}</td>
                     <td className="font-mono">{producedQuantity}</td>
-                    <td className="font-mono" style={{ color: b.defectCount > 10 ? '#E55353' : '#22A06B', fontWeight: 700 }}>{defectCount}</td>
+                    <td className="font-mono" style={{ color: defectCount > 0 ? '#E55353' : '#22A06B', fontWeight: 700 }}>{defectCount}</td>
                     <td className="font-mono">{rate}%</td>
                     <td><Badge status={b.status} /></td>
                     <td className="font-mono" style={{ color: '#8D9AAA' }}>{b.production_start ? new Date(b.production_start).toLocaleString() : 'N/A'}</td>
