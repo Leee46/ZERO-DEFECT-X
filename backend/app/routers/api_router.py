@@ -183,13 +183,22 @@ async def analyze_uploaded_image(
         except Exception as err:
             pass
 
-    # Analyze real metal ring photo with OpenCV Vision Engine
+    # Analyze the uploaded image with the OpenCV Vision Engine.
+    # Convert unexpected vision exceptions into a JSON API error instead of an
+    # opaque 500/plain-text response that the browser reports as "Failed to fetch".
     cv_provider = OpenCVVisionProvider()
-    vision_result = cv_provider.analyze_image(
-        image_path=raw_save_path,
-        machine_id=machine_id,
-        inspection_id=insp_id
-    )
+    try:
+        vision_result = cv_provider.analyze_image(
+            image_path=raw_save_path,
+            machine_id=machine_id,
+            inspection_id=insp_id
+        )
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(status_code=422, detail=str(exc))
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Vision analysis failed: {exc}")
 
     rel_raw_url = f"/uploads/inspections/raw/{raw_filename}"
 
