@@ -60,7 +60,7 @@ export const RootCausePage: React.FC<RootCausePageProps> = ({ inspectionId, onNa
 
   const chartData = candidates.map((c: any) => ({
     factor: c.factor,
-    score: Math.round((c.score || 0.70) * 100)
+    score: Math.round(Number(c.score ?? 0) * 100)
   }));
 
   return (
