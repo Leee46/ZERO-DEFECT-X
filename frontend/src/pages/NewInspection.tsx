@@ -211,9 +211,9 @@ export const NewInspection: React.FC<NewInspectionProps> = ({ onNavigate }) => {
             <div>
               <label className="scada-label">OPERATOR SHIFT</label>
               <select className="scada-select" value={shift} onChange={(e) => setShift(e.target.value)}>
-                <option value="Shift A">Shift A (Morning 07:00 - 15:00)</option>
-                <option value="Shift B">Shift B (Evening 15:00 - 23:00)</option>
-                <option value="Shift C">Shift C (Night 23:00 - 07:00)</option>
+                <option value="S1">Shift A (Morning 07:00 - 15:00)</option>
+                <option value="S2">Shift B (Evening 15:00 - 23:00)</option>
+                <option value="S3">Shift C (Night 23:00 - 07:00)</option>
               </select>
             </div>
 
