@@ -119,12 +119,20 @@ export const InspectionDetails: React.FC<InspectionDetailsProps> = ({ inspection
           justifyContent: 'space-between',
           gap: '1rem',
           padding: '0.85rem 1rem',
-          backgroundColor: '#101A2A',
-          border: '1px solid #26364A'
+          backgroundColor: isNotAnalyzable ? '#2C2417' : '#101A2A',
+          border: `1px solid ${isNotAnalyzable ? '#D99A2B' : '#26364A'}`,
+          borderLeft: `4px solid ${isNotAnalyzable ? '#D99A2B' : '#22A06B'}`
         }}
       >
-        <div style={{ fontSize: '0.8rem', color: '#8D9AAA' }}>
-          Inspection complete. You can immediately submit another product image without reloading the application.
+        <div>
+          <div style={{ fontSize: '0.8rem', fontWeight: 800, color: isNotAnalyzable ? '#F3C969' : '#67D49B' }}>
+            {isNotAnalyzable ? 'INSPECTION INCOMPLETE' : 'INSPECTION COMPLETE'}
+          </div>
+          <div style={{ fontSize: '0.8rem', color: '#8D9AAA', marginTop: '0.2rem' }}>
+            {isNotAnalyzable
+              ? 'The uploaded image is not a valid manufacturing component. Upload a relevant product image to complete the inspection.'
+              : 'The product image was successfully analyzed. You can immediately submit another product image without reloading the application.'}
+          </div>
         </div>
         <button
           className="scada-btn scada-btn-primary"
@@ -132,7 +140,7 @@ export const InspectionDetails: React.FC<InspectionDetailsProps> = ({ inspection
           style={{ whiteSpace: 'nowrap' }}
         >
           <Search size={16} />
-          ANALYZE ANOTHER IMAGE
+          {isNotAnalyzable ? 'UPLOAD RELEVANT IMAGE' : 'ANALYZE ANOTHER IMAGE'}
         </button>
       </div>
 
