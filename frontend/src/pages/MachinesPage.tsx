@@ -30,7 +30,12 @@ export const MachinesPage: React.FC = () => {
           riskScore: Number(m.risk_score || 0),
           baselineTemp: 70,
           baselineVibration: 2.5,
-          primaryDefectType: 'Recorded defects'
+          primaryDefectType: 'Normal',
+          baselinePressure: 6.0,
+          productionCount: 0,
+          defectCount: 0,
+          recentAlerts: 0,
+          historicalTrend: []
         })) as Machine[];
         setMachines(rows);
       })
