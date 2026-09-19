@@ -5,11 +5,11 @@ import { HardDrive } from 'lucide-react';
 
 export const SystemStatusPage: React.FC = () => {
   const subsystems = [
-    { name: 'Vision AI Provider Layer', provider: 'DemoVisionProvider (YOLOv8 Simulation)', status: 'ONLINE', latency: '42 ms' },
-    { name: 'FastAPI Backend Service', provider: 'Python / Pydantic REST API Layer', status: 'READY (MOCKED)', latency: '3 ms' },
-    { name: 'PostgreSQL Database', provider: 'PostgreSQL 15 Schema & Seed', status: 'SCHEMA READY', latency: '1 ms' },
-    { name: 'ESP32 Industrial IoT Adapter', provider: 'REST / WebSocket / MQTT Bus', status: 'STANDBY (SIMULATED)', latency: 'N/A' },
-    { name: 'Root-Cause Association Engine', provider: 'Deterministic Heuristic Rule Service', status: 'ACTIVE', latency: '8 ms' }
+    { name: 'Vision Inspection Engine', provider: 'OpenCV Anomaly Detector (development-stage)', status: 'ACTIVE', latency: 'Measured per request' },
+    { name: 'FastAPI Backend Service', provider: 'Python / FastAPI REST API', status: 'ACTIVE', latency: 'Measured per request' },
+    { name: 'Database', provider: 'SQLite local / PostgreSQL configurable', status: 'CONFIGURED', latency: 'Database dependent' },
+    { name: 'Virtual Factory Adapter', provider: 'HTTP telemetry / corrective-action bridge', status: 'SIMULATED', latency: 'Network dependent' },
+    { name: 'Probable-Cause Engine', provider: 'Synchronized telemetry + historical association', status: 'ACTIVE', latency: 'Measured per request' }
   ];
 
   return (
