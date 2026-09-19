@@ -80,7 +80,7 @@ export const InspectionDetails: React.FC<InspectionDetailsProps> = ({ inspection
             imageUrl={currentInspection.imageUrl || currentInspection.image_path || '/images/sample.jpg'}
             annotatedImageUrl={currentInspection.annotated_image_url || (currentInspection.image_path ? currentInspection.image_path.replace('/raw/', '/annotated/annotated_') : undefined)}
             defects={currentInspection.defects || []}
-            status={isDefective ? 'DEFECTIVE' : 'PASS'}
+            status={isNotAnalyzable ? 'NOT_ANALYZABLE' : isDefective ? 'DEFECTIVE' : 'PASS'}
             modelProvider="OpenCV Anomaly Detector (Development-stage computer vision)"
             confidence={Math.round((currentInspection.overall_confidence || currentInspection.anomaly_score || 0.88) * 100)}
           />
