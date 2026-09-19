@@ -176,16 +176,20 @@ The backend and vision processing pipeline is structured across clean modular pa
 ## 10. Development Progress
 
 ```
-[Phase 1: Project Setup & Database Schema] ───────────────► COMPLETED (100%)
-[Phase 2: React SCADA Dashboard & Components] ────────────► COMPLETED (100%)
-[Phase 3: OpenCV Computer Vision Engine] ─────────────────► COMPLETED (100%)
-[Phase 4: Telemetry Client & Laptop 2 Integration] ───────► COMPLETED (100%)
-[Phase 5: Root Cause Engine & Risk Monitor] ──────────────► COMPLETED (100%)
-[Phase 6: Closed-Loop Reinspection & Verification] ───────► COMPLETED (100%)
-[Phase 7: Cloud Deployment (Render & Netlify)] ───────────► COMPLETED (100%)
+[Phase 1: Project Setup & Database Schema] ───────────────► IMPLEMENTED
+[Phase 2: React SCADA Dashboard & Components] ────────────► IMPLEMENTED
+[Phase 3: OpenCV Computer Vision Engine] ─────────────────► IMPLEMENTED
+[Phase 4: Telemetry Client & Laptop 2 Integration] ───────► IMPLEMENTED
+[Phase 5: Root Cause Engine & Risk Monitor] ──────────────► IMPLEMENTED
+[Phase 6: Closed-Loop Reinspection & Verification] ───────► IMPLEMENTED
+[Phase 7: Cloud Deployment (Render & Netlify)] ───────────► CONFIGURATION AVAILABLE; DEPLOYMENT MUST BE VERIFIED PER ENVIRONMENT
 ```
 
 ---
+
+## 11. Commercial/Productization Scope
+
+The current repository is a functional SI-03 prototype and demonstration system. It is not represented as an industrial-certified product. See [`docs/SI03_REQUIREMENTS.md`](docs/SI03_REQUIREMENTS.md) for the requirement traceability matrix, evidence-integrity rules, and commercial hardening roadmap.
 
 ## 11. Development History
 
