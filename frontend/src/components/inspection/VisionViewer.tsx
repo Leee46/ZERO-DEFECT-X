@@ -188,7 +188,7 @@ export const VisionViewer: React.FC<VisionViewerProps> = ({
           }}
         >
           COMPUTER VISION ANALYSIS: <span style={{ color: '#4F7CAC', fontWeight: 600 }}>{modelProvider}</span> | ANOMALY SCORE:{' '}
-          <span style={{ color: '#E8EDF3', fontWeight: 700 }}>{confidence}%</span>
+          <span style={{ color: '#E8EDF3', fontWeight: 700 }}>{status === 'NOT_ANALYZABLE' ? 'N/A' : confidence + '%'}</span>
         </div>
       </div>
     </div>
