@@ -8,14 +8,9 @@ interface ProductionContextCardProps {
 }
 
 export const ProductionContextCard: React.FC<ProductionContextCardProps> = ({ inspection }) => {
-  const p = inspection.parameters || {
-    temperature: 72.0,
-    vibration: 4.8,
-    pressure: 6.2,
-    speed: 1480,
-    envTemp: 29.0,
-    envHumidity: 68.0
-  };
+  const p = inspection.parameters || {};
+  const formatNumber = (value: unknown, decimals = 1) =>
+    typeof value === 'number' && Number.isFinite(value) ? value.toFixed(decimals) : 'N/A';
 
   const isOffline = inspection.factory_status === 'Virtual Factory Offline' || inspection.factory_source_label === 'OFFLINE';
   const sourceLabel = inspection.factory_source_label || (isOffline ? 'Virtual Factory Offline' : 'SIMULATED FACTORY DATA');
@@ -54,35 +49,35 @@ export const ProductionContextCard: React.FC<ProductionContextCardProps> = ({ in
         <div style={{ backgroundColor: '#162235', padding: '0.6rem 0.75rem', borderRadius: '4px', border: '1px solid #26364A' }}>
           <span className="scada-label">MACHINE STATION</span>
           <span style={{ fontSize: '1rem', fontWeight: 700, color: '#E8EDF3', fontFamily: 'var(--font-mono)' }}>
-            {inspection.machineId || inspection.machine_id || 'M03'}
+            {inspection.machineId || inspection.machine_id || 'N/A'}
           </span>
         </div>
 
         <div style={{ backgroundColor: '#162235', padding: '0.6rem 0.75rem', borderRadius: '4px', border: '1px solid #26364A' }}>
           <span className="scada-label">PRODUCTION BATCH</span>
           <span style={{ fontSize: '1rem', fontWeight: 700, color: '#4F7CAC', fontFamily: 'var(--font-mono)' }}>
-            {inspection.batchId || inspection.batch_id || 'B1042'}
+            {inspection.batchId || inspection.batch_id || 'N/A'}
           </span>
         </div>
 
         <div style={{ backgroundColor: '#162235', padding: '0.6rem 0.75rem', borderRadius: '4px', border: '1px solid #26364A' }}>
           <span className="scada-label">OPERATOR SHIFT</span>
           <span style={{ fontSize: '1rem', fontWeight: 700, color: '#E8EDF3', fontFamily: 'var(--font-mono)' }}>
-            {inspection.shift || inspection.shift_id || 'Shift B'}
+            {inspection.shift || inspection.shift_id || 'N/A'}
           </span>
         </div>
 
         <div style={{ backgroundColor: '#162235', padding: '0.6rem 0.75rem', borderRadius: '4px', border: '1px solid #26364A' }}>
           <span className="scada-label">PRODUCT SKU</span>
           <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#8D9AAA', fontFamily: 'var(--font-mono)' }}>
-            {inspection.productId || inspection.product_id || 'RING-001'}
+            {inspection.productId || inspection.product_id || 'N/A'}
           </span>
         </div>
       </div>
 
       {/* Sensor Telemetry Readings */}
       <span className="scada-label" style={{ marginBottom: '0.5rem', display: 'block' }}>
-        SIMULATED FACTORY DATA (LAPTOP 2 PROCESS READINGS)
+        TELEMETRY READINGS (LAPTOP 2 VIRTUAL FACTORY)
       </span>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
         {/* Temperature */}
@@ -102,7 +97,7 @@ export const ProductionContextCard: React.FC<ProductionContextCardProps> = ({ in
             {p.temperature > 70 && <span style={{ color: '#D99A2B', fontWeight: 600 }}>ELEVATED</span>}
           </div>
           <span style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: p.temperature > 70 ? '#D99A2B' : '#E8EDF3' }}>
-            {p.temperature.toFixed(1)}°C
+            {formatNumber(p.temperature)}°C
           </span>
         </div>
 
@@ -123,7 +118,7 @@ export const ProductionContextCard: React.FC<ProductionContextCardProps> = ({ in
             {p.vibration > 3.0 && <span style={{ color: '#E55353', fontWeight: 600 }}>ANOMALY</span>}
           </div>
           <span style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: p.vibration > 3.0 ? '#E55353' : '#E8EDF3' }}>
-            {p.vibration.toFixed(1)} mm/s
+            {formatNumber(p.vibration)} mm/s
           </span>
         </div>
 
@@ -134,7 +129,7 @@ export const ProductionContextCard: React.FC<ProductionContextCardProps> = ({ in
             PRESSURE
           </div>
           <span style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#E8EDF3' }}>
-            {p.pressure.toFixed(1)} bar
+            {formatNumber(p.pressure)} bar
           </span>
         </div>
 
@@ -142,7 +137,7 @@ export const ProductionContextCard: React.FC<ProductionContextCardProps> = ({ in
         <div style={{ backgroundColor: '#162235', border: '1px solid #26364A', padding: '0.65rem 0.8rem', borderRadius: '4px' }}>
           <span className="scada-label">MACHINE SPEED</span>
           <span style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#E8EDF3' }}>
-            {p.speed} RPM
+            {typeof p.speed === 'number' ? p.speed : 'N/A'} RPM
           </span>
         </div>
 
@@ -150,7 +145,7 @@ export const ProductionContextCard: React.FC<ProductionContextCardProps> = ({ in
         <div style={{ backgroundColor: '#162235', border: '1px solid #26364A', padding: '0.65rem 0.8rem', borderRadius: '4px' }}>
           <span className="scada-label">ENVIRONMENT TEMP</span>
           <span style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#E8EDF3' }}>
-            {(p.envTemp || 29.0).toFixed(1)}°C
+            {formatNumber(p.envTemp)}°C
           </span>
         </div>
 
@@ -158,7 +153,7 @@ export const ProductionContextCard: React.FC<ProductionContextCardProps> = ({ in
         <div style={{ backgroundColor: '#162235', border: '1px solid #26364A', padding: '0.65rem 0.8rem', borderRadius: '4px' }}>
           <span className="scada-label">HUMIDITY</span>
           <span style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#E8EDF3' }}>
-            {p.envHumidity || 68}%
+            {formatNumber(p.envHumidity, 0)}%
           </span>
         </div>
       </div>
