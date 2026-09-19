@@ -49,6 +49,31 @@ export const InspectionDetails: React.FC<InspectionDetailsProps> = ({ inspection
         if (idx === 1) onNavigate('new-inspection');
       }} />
 
+      <div
+        className="scada-card"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1rem',
+          padding: '0.85rem 1rem',
+          backgroundColor: '#101A2A',
+          border: '1px solid #26364A'
+        }}
+      >
+        <div style={{ fontSize: '0.8rem', color: '#8D9AAA' }}>
+          Inspection complete. You can immediately submit another product image without reloading the application.
+        </div>
+        <button
+          className="scada-btn scada-btn-primary"
+          onClick={() => onNavigate('new-inspection')}
+          style={{ whiteSpace: 'nowrap' }}
+        >
+          <Search size={16} />
+          ANALYZE ANOTHER IMAGE
+        </button>
+      </div>
+
       <DemoBanner message={`INSPECTION RECORD — ID: ${currentInspection.id} | Product: ${currentInspection.productId || currentInspection.product_id}`} />
 
       {isNotAnalyzable && (
