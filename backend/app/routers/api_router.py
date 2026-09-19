@@ -297,8 +297,7 @@ async def analyze_uploaded_image(
             "confidence": rc_data["confidence"],
             "verification_required": rc_data["verification_required"]
         },
-        "disclaimer": vision_result["disclaimer"]
-    }
+        "disclaimer": vision_result["disclaimer"]    }
 
 
 # 1. Health Check
@@ -597,8 +596,7 @@ def get_analytics(db: Session = Depends(get_db)):
 
 # 10. Root Cause API
 @router.get("/root-cause", response_model=List[RootCauseOut])
-def get_root_causes(db: Session = Depends(get_db)):
-    return db.query(RootCauseAnalysis).all()
+def get_root_causes(db: Session = Depends(get_db)):    return db.query(RootCauseAnalysis).all()
 
 
 @router.get("/root-cause/{inspection_id}")
@@ -897,8 +895,7 @@ async def analyze_and_reinspect(
     if image and image.filename:
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         raw_dir = os.path.join(base_dir, "uploads", "reinspections")
-        os.makedirs(raw_dir, exist_ok=True)
-        ext = os.path.splitext(image.filename)[1].lower() or ".jpg"
+        os.makedirs(raw_dir, exist_ok=True)        ext = os.path.splitext(image.filename)[1].lower() or ".jpg"
         save_name = f"REINSP_{uuid.uuid4().hex[:6]}{ext}"
         save_path = os.path.join(raw_dir, save_name)
         with open(save_path, "wb") as buffer:
@@ -1023,12 +1020,14 @@ def get_live_factory_telemetry(machine_id: str = "M03", product_id: str = "RING-
                 if resp.status == 200:
                     data = json.loads(resp.read().decode())
 
-                    vib = data.get("vibration_mm_s") if data.get("vibration_mm_s") is not None else (data.get("telemetry", {}).get("vibration") if isinstance(data.get("telemetry"), dict) else data.get("vibration"))
-                    temp = data.get("temperature_c") if data.get("temperature_c") is not None else (data.get("telemetry", {}).get("temperature") if isinstance(data.get("telemetry"), dict) else data.get("temperature"))
-                    press = data.get("pressure_bar") if data.get("pressure_bar") is not None else (data.get("telemetry", {}).get("pressure") if isinstance(data.get("telemetry"), dict) else data.get("pressure"))
-                    rpm = data.get("spindle_rpm") if data.get("spindle_rpm") is not None else (data.get("telemetry", {}).get("speed") if isinstance(data.get("telemetry"), dict) else data.get("speed"))
-                    env_t = data.get("environment_temp_c") if data.get("environment_temp_c") is not None else (data.get("environment", {}).get("temperature") if isinstance(data.get("environment"), dict) else data.get("env_temp"))
-                    env_h = data.get("humidity_pct") if data.get("humidity_pct") is not None else (data.get("environment", {}).get("humidity") if isinstance(data.get("environment"), dict) else data.get("humidity"))
+                    payload = data.get("data") if isinstance(data.get("data"), dict) else data
+
+                    vib = payload.get("vibration_mm_s") if payload.get("vibration_mm_s") is not None else (payload.get("telemetry", {}).get("vibration") if isinstance(payload.get("telemetry"), dict) else payload.get("vibration"))
+                    temp = payload.get("temperature_c") if payload.get("temperature_c") is not None else (payload.get("telemetry", {}).get("temperature") if isinstance(payload.get("telemetry"), dict) else payload.get("temperature"))
+                    press = payload.get("pressure_bar") if payload.get("pressure_bar") is not None else (payload.get("telemetry", {}).get("pressure") if isinstance(payload.get("telemetry"), dict) else payload.get("pressure"))
+                    rpm = payload.get("spindle_rpm") if payload.get("spindle_rpm") is not None else (payload.get("telemetry", {}).get("speed") if isinstance(payload.get("telemetry"), dict) else payload.get("speed"))
+                    env_t = payload.get("environment_temp_c") if payload.get("environment_temp_c") is not None else (payload.get("environment", {}).get("temperature") if isinstance(payload.get("environment"), dict) else payload.get("env_temp"))
+                    env_h = payload.get("humidity_pct") if payload.get("humidity_pct") is not None else (payload.get("environment", {}).get("humidity") if isinstance(payload.get("environment"), dict) else payload.get("humidity"))
 
                     return {
                         "connection_status": "CONNECTED",
@@ -1036,19 +1035,19 @@ def get_live_factory_telemetry(machine_id: str = "M03", product_id: str = "RING-
                         "data_type": "SIMULATED FACTORY DATA",
                         "source_label": "SIMULATED FACTORY DATA",
                         "laptop2_url": target_url,
-                        "machine_id": data.get("machine_id", machine_id),
-                        "product_id": data.get("product_id", product_id),
-                        "batch_id": data.get("batch_id", batch_id),
-                        "operator_shift": data.get("operator_shift", "Shift B"),
+                        "machine_id": payload.get("machine_id", machine_id),
+                        "product_id": payload.get("product_id", product_id),
+                        "batch_id": payload.get("batch_id", batch_id),
+                        "operator_shift": payload.get("operator_shift", "Shift B"),
                         "vibration_mm_s": float(vib) if vib is not None else None,
                         "temperature_c": float(temp) if temp is not None else None,
                         "pressure_bar": float(press) if press is not None else None,
                         "spindle_rpm": int(rpm) if rpm is not None else None,
                         "environment_temp_c": float(env_t) if env_t is not None else None,
                         "humidity_pct": float(env_h) if env_h is not None else None,
-                        "machine_status": data.get("machine_status", "NORMAL"),
-                        "production_status": data.get("production_status", "RUNNING"),
-                        "timestamp": data.get("timestamp")
+                        "machine_status": payload.get("machine_status", "NORMAL"),
+                        "production_status": payload.get("production_status", "RUNNING"),
+                        "timestamp": payload.get("timestamp")
                     }
         except Exception:
             pass
@@ -1060,5 +1059,4 @@ def get_live_factory_telemetry(machine_id: str = "M03", product_id: str = "RING-
         "source_label": "OFFLINE",
         "message": "Laptop 2 Virtual Factory is unreachable. Configure LAPTOP2_URL for a second-machine simulator."
     }
-
 
