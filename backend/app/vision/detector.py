@@ -107,7 +107,7 @@ class OpenCVDetector:
         # Secondary scratch/crack pass. The primary Canny contour detector can miss
         # very thin diagonal marks on reflective machined metal. Hough line evidence is
         # therefore used as a conservative second signal, not as a forced defect result.
-        linear_candidates = cls._detect_linear_surface_marks(blurred_gray, edges, cur_w, cur_h)
+        linear_candidates = cls._detect_linear_surface_marks(blurred_gray, edges, cur_w, cur_h, orig_dim, scale)
         for candidate in linear_candidates:
             # Avoid duplicate boxes that substantially overlap an existing anomaly.
             cb = candidate["bounding_box"]
@@ -131,7 +131,7 @@ class OpenCVDetector:
         return detected_anomalies
 
     @classmethod
-    def _detect_linear_surface_marks(cls, gray: np.ndarray, edges: np.ndarray, cur_w: int, cur_h: int) -> List[Dict[str, Any]]:
+    def _detect_linear_surface_marks(cls, gray: np.ndarray, edges: np.ndarray, cur_w: int, cur_h: int, orig_dim: Tuple[int, int], scale: float) -> List[Dict[str, Any]]:
         """Detect thin internal linear marks typical of scratches on machined surfaces."""
         min_dim = min(cur_w, cur_h)
         min_line_length = max(28, int(min_dim * 0.07))
@@ -186,19 +186,20 @@ class OpenCVDetector:
             if signal < 0.50:
                 continue
 
-            # Convert the detector coordinates to the original image space.
-            scale_x = 1.0
-            scale_y = 1.0
-            ox1, oy1 = int(bx1 / scale_x), int(by1 / scale_y)
-            ox2, oy2 = int(bx2 / scale_x), int(by2 / scale_y)
-            norm_x_min = round(ox1 / float(cur_w), 3)
-            norm_y_min = round(oy1 / float(cur_h), 3)
-            norm_x_max = round(ox2 / float(cur_w), 3)
-            norm_y_max = round(oy2 / float(cur_h), 3)
+            # Convert detector coordinates back to the original image space.
+            orig_w, orig_h = orig_dim
+            ox1 = max(0, min(orig_w, int(bx1 / scale)))
+            oy1 = max(0, min(orig_h, int(by1 / scale)))
+            ox2 = max(0, min(orig_w, int(bx2 / scale)))
+            oy2 = max(0, min(orig_h, int(by2 / scale)))
+            norm_x_min = round(ox1 / float(orig_w), 3)
+            norm_y_min = round(oy1 / float(orig_h), 3)
+            norm_x_max = round(ox2 / float(orig_w), 3)
+            norm_y_max = round(oy2 / float(orig_h), 3)
             center_x = (ox1 + ox2) / 2.0
             center_y = (oy1 + oy2) / 2.0
-            horiz = "Left" if center_x < cur_w / 3 else ("Right" if center_x > cur_w * 2 / 3 else "Center")
-            vert = "Upper" if center_y < cur_h / 3 else ("Lower" if center_y > cur_h * 2 / 3 else "Middle")
+            horiz = "Left" if center_x < orig_w / 3 else ("Right" if center_x > orig_w * 2 / 3 else "Center")
+            vert = "Upper" if center_y < orig_h / 3 else ("Lower" if center_y > orig_h * 2 / 3 else "Middle")
 
             candidates.append({
                 "bounding_box": {
