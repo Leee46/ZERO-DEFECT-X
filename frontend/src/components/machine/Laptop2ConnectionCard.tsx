@@ -43,7 +43,7 @@ export const Laptop2ConnectionCard: React.FC = () => {
               LAPTOP 2 VIRTUAL FACTORY INTEGRATION
             </span>
             <span style={{ fontSize: '0.72rem', color: '#8D9AAA', display: 'block' }}>
-              Node IP: <strong style={{ color: '#4F7CAC' }}>10.10.56.118:8000</strong> | Endpoint: <span style={{ fontFamily: 'var(--font-mono)' }}>/api/telemetry</span>
+              Node: <strong style={{ color: '#4F7CAC' }}>{telemetry?.laptop2_url || 'Configured via LAPTOP2_URL'}</strong> | Endpoint: <span style={{ fontFamily: 'var(--font-mono)' }}>/api/telemetry</span>
             </span>
           </div>
         </div>
@@ -93,25 +93,25 @@ export const Laptop2ConnectionCard: React.FC = () => {
             <div style={{ backgroundColor: '#162235', padding: '0.5rem 0.65rem', borderRadius: '4px', border: '1px solid #26364A' }}>
               <span className="scada-label">MACHINE ID</span>
               <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#E8EDF3', fontFamily: 'var(--font-mono)' }}>
-                {telemetry.machine_id || 'M03'}
+                {telemetry.machine_id || 'N/A'}
               </span>
             </div>
             <div style={{ backgroundColor: '#162235', padding: '0.5rem 0.65rem', borderRadius: '4px', border: '1px solid #26364A' }}>
               <span className="scada-label">PRODUCT ID</span>
               <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#4F7CAC', fontFamily: 'var(--font-mono)' }}>
-                {telemetry.product_id || 'RING-001'}
+                {telemetry.product_id || 'N/A'}
               </span>
             </div>
             <div style={{ backgroundColor: '#162235', padding: '0.5rem 0.65rem', borderRadius: '4px', border: '1px solid #26364A' }}>
               <span className="scada-label">BATCH ID</span>
               <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#E8EDF3', fontFamily: 'var(--font-mono)' }}>
-                {telemetry.batch_id || 'B1042'}
+                {telemetry.batch_id || 'N/A'}
               </span>
             </div>
             <div style={{ backgroundColor: '#162235', padding: '0.5rem 0.65rem', borderRadius: '4px', border: '1px solid #26364A' }}>
               <span className="scada-label">SHIFT</span>
               <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#E8EDF3', fontFamily: 'var(--font-mono)' }}>
-                {telemetry.operator_shift || 'Shift B'}
+                {telemetry.operator_shift || 'N/A'}
               </span>
             </div>
           </div>
@@ -190,7 +190,7 @@ export const Laptop2ConnectionCard: React.FC = () => {
             VIRTUAL FACTORY OFFLINE — DISCONNECTED
           </span>
           <span style={{ fontSize: '0.75rem', color: '#8D9AAA' }}>
-            Laptop 2 telemetry endpoint (10.10.56.118:8000) not reachable. Live connection required for production context tracking.
+            Configured Laptop 2 telemetry endpoint is not reachable. Live connection is required for production context tracking.
           </span>
         </div>
       )}
