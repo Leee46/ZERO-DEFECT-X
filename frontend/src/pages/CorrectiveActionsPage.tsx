@@ -185,12 +185,7 @@ export const CorrectiveActionsPage: React.FC<CorrectiveActionsPageProps> = ({ on
 
               <span className="scada-label" style={{ color: '#4F7CAC' }}>SYSTEM-RECOMMENDED ACTIONS</span>
               <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', marginBottom: '1.25rem' }}>
-                {(activeAction.recommended_actions || [
-                  'Inspect M03 vibration source & spindle dampeners',
-                  'Check tool chuck wear and mechanical alignment',
-                  'Verify affected batch tolerances',
-                  'Reinspect subsequent product samples'
-                ]).map((rec: string, idx: number) => (
+                {(activeAction.recommended_actions || []).map((rec: string, idx: number) => (
                   <li
                     key={idx}
                     style={{
@@ -262,7 +257,7 @@ export const CorrectiveActionsPage: React.FC<CorrectiveActionsPageProps> = ({ on
                 ) : activeAction.status === 'In Progress' ? (
                   <div style={{ marginTop: '0.75rem' }}>
                     <p style={{ fontSize: '0.8rem', color: '#22A06B', marginBottom: '0.75rem' }}>
-                      Intervention in progress. Complete demo action to deterministically normalize machine parameters.
+                      Intervention in progress. Complete the maintenance action and record the returned Virtual Factory telemetry.
                     </p>
                     <button
                       className="scada-btn"
@@ -309,9 +304,9 @@ export const CorrectiveActionsPage: React.FC<CorrectiveActionsPageProps> = ({ on
                     </span>
                   </div>
                   <div style={{ fontSize: '0.8rem', color: '#8D9AAA', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                    <div>Vibration: <strong style={{ color: '#E55353' }}>{activeAction.before_snapshot?.vibration || 4.8} mm/s</strong></div>
-                    <div>Temp: <strong style={{ color: '#E8EDF3' }}>{activeAction.before_snapshot?.temperature || 72.0}°C</strong></div>
-                    <div>Risk: <strong style={{ color: '#E55353' }}>{activeAction.before_snapshot?.risk_level || 'HIGH'}</strong></div>
+                    <div>Vibration: <strong style={{ color: '#E55353' }}>{activeAction.before_snapshot?.vibration ?? 'N/A'} mm/s</strong></div>
+                    <div>Temp: <strong style={{ color: '#E8EDF3' }}>{activeAction.before_snapshot?.temperature ?? 'N/A'}°C</strong></div>
+                    <div>Risk: <strong style={{ color: '#E55353' }}>{activeAction.before_snapshot?.risk_level || 'N/A'}</strong></div>
                   </div>
                 </div>
 
@@ -352,7 +347,7 @@ export const CorrectiveActionsPage: React.FC<CorrectiveActionsPageProps> = ({ on
 
               {/* Closed Loop Notice */}
               <div style={{ backgroundColor: 'rgba(0, 122, 204, 0.08)', border: '1px solid rgba(0, 122, 204, 0.25)', padding: '0.75rem', borderRadius: '4px', fontSize: '0.75rem', color: '#8D9AAA' }}>
-                <strong style={{ color: '#4F7CAC' }}>Deterministic Simulation Policy:</strong> Corrective action updates controlled machine parameters toward normal baseline while strictly preserving all historical defect records.
+                <strong style={{ color: '#4F7CAC' }}>Deterministic Simulation Policy:</strong> Corrective action is linked to the production record; post-maintenance state is accepted only from the connected Virtual Factory telemetry.
               </div>
             </div>
           </div>
