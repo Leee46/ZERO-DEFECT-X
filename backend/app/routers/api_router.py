@@ -559,7 +559,79 @@ def create_inspection(
     return new_insp
 
 
-# 8. Defects API
+# 8. Product Traceability API
+@router.get("/traceability/{inspection_id}")
+def get_product_traceability(inspection_id: str, db: Session = Depends(get_db)):
+    insp = db.query(Inspection).filter(Inspection.id == inspection_id).first()
+    if not insp:
+        raise HTTPException(status_code=404, detail=f"Inspection {inspection_id} not found")
+
+    defects = db.query(Defect).filter(Defect.inspection_id == inspection_id).all()
+    root_causes = db.query(RootCauseAnalysis).filter(
+        RootCauseAnalysis.inspection_id == inspection_id
+    ).order_by(RootCauseAnalysis.created_at.desc()).all()
+    actions = db.query(CorrectiveAction).filter(
+        CorrectiveAction.inspection_id == inspection_id
+    ).order_by(CorrectiveAction.created_at.asc()).all()
+    reinspections = db.query(Reinspection).filter(
+        Reinspection.original_inspection_id == inspection_id
+    ).order_by(Reinspection.reinspection_time.asc()).all()
+
+    timeline = [{
+        "stepNumber": 1,
+        "title": "Product Vision Inspection",
+        "status": "COMPLETED",
+        "dataBadge": insp.status,
+        "timestamp": insp.inspection_time.isoformat() if insp.inspection_time else "N/A",
+        "description": f"Image inspection recorded {len(defects)} defect(s).",
+        "operatorOrSystem": "OpenCV Vision Engine"
+    }]
+
+    if root_causes:
+        rc = root_causes[0]
+        timeline.append({
+            "stepNumber": 2,
+            "title": "Probable-Cause Analysis",
+            "status": "COMPLETED",
+            "dataBadge": "EVIDENCE REVIEW",
+            "timestamp": rc.created_at.isoformat() if rc.created_at else "N/A",
+            "description": rc.probable_factor,
+            "operatorOrSystem": "Production Context Intelligence"
+        })
+
+    for action in actions:
+        timeline.append({
+            "stepNumber": 3,
+            "title": "Corrective Action",
+            "status": "COMPLETED" if action.status in {"Completed", "Verified"} else "WARNING",
+            "dataBadge": action.status,
+            "timestamp": (action.completed_at or action.started_at or action.created_at).isoformat() if (action.completed_at or action.started_at or action.created_at) else "N/A",
+            "description": action.action_description,
+            "operatorOrSystem": action.assigned_to or "Maintenance"
+        })
+
+    for reinspection in reinspections:
+        timeline.append({
+            "stepNumber": 4,
+            "title": "Reinspection & Verification",
+            "status": "COMPLETED" if reinspection.verification_status == "VERIFIED" else "WARNING",
+            "dataBadge": reinspection.verification_status or reinspection.status,
+            "timestamp": reinspection.reinspection_time.isoformat() if reinspection.reinspection_time else "N/A",
+            "description": reinspection.verification_notes or f"Reinspection status: {reinspection.status}",
+            "operatorOrSystem": "Verification Engine"
+        })
+
+    return {
+        "productId": insp.product_id,
+        "batchId": insp.batch_id,
+        "machineId": insp.machine_id,
+        "shift": insp.shift_id,
+        "overallStatus": "VERIFIED OK" if reinspections and reinspections[-1].verification_status == "VERIFIED" else insp.status,
+        "timeline": timeline
+    }
+
+
+# 9. Defects API
 @router.get("/defects", response_model=List[DefectOut])
 def get_defects(db: Session = Depends(get_db)):
     return db.query(Defect).all()
