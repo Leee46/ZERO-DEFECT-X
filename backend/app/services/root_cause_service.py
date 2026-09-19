@@ -37,13 +37,14 @@ class ProbableCauseEngine:
 
         def distance(item: MachineParameter) -> float:
             item_ts = item.timestamp
-            if item_ts is None:
+            target_ts = timestamp
+            if item_ts is None or target_ts is None:
                 return float("inf")
-            if item_ts.tzinfo is None and timestamp.tzinfo is not None:
-                item_ts = item_ts.replace(tzinfo=datetime.timezone.utc)
-            elif item_ts.tzinfo is not None and timestamp.tzinfo is None:
-                timestamp = timestamp.replace(tzinfo=datetime.timezone.utc)
-            return abs((item_ts - timestamp).total_seconds())
+            if item_ts.tzinfo is None and target_ts.tzinfo is not None:
+                item_ts = item_ts.replace(tzinfo=target_ts.tzinfo)
+            elif item_ts.tzinfo is not None and target_ts.tzinfo is None:
+                target_ts = target_ts.replace(tzinfo=item_ts.tzinfo)
+            return abs((item_ts - target_ts).total_seconds())
 
         nearest = min(parameters, key=distance)
         return nearest if distance(nearest) <= MATCH_WINDOW.total_seconds() else None
