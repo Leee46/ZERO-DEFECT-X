@@ -142,6 +142,7 @@ export const InspectionHistory: React.FC<InspectionHistoryProps> = ({ onNavigate
             <option value="ALL">All Statuses (Pass & Defective)</option>
             <option value="DEFECTIVE">Defective Only</option>
             <option value="PASS">Pass Only</option>
+            <option value="NOT_ANALYZABLE">Not Analyzable</option>
           </select>
 
           <select className="scada-select" value={machineFilter} onChange={(e) => setMachineFilter(e.target.value)}>
@@ -190,7 +191,7 @@ export const InspectionHistory: React.FC<InspectionHistoryProps> = ({ onNavigate
                       {insp.defects[0] ? <Badge status={insp.defects[0].severity} showDot={false} /> : <span style={{ color: '#5C6B7E' }}>—</span>}
                     </td>
                     <td className="font-mono">
-                      {insp.defects[0] ? `${insp.defects[0].confidence}%` : '99.4%'}
+                      {insp.defects[0] ? `${insp.defects[0].confidence}%` : 'N/A'}
                     </td>
                     <td className="font-mono" style={{ color: '#8D9AAA' }}>
                       {insp.timestamp}
