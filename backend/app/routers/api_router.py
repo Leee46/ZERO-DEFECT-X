@@ -297,7 +297,8 @@ async def analyze_uploaded_image(
             "confidence": rc_data["confidence"],
             "verification_required": rc_data["verification_required"]
         },
-        "disclaimer": vision_result["disclaimer"]    }
+        "disclaimer": vision_result["disclaimer"]
+    }
 
 
 # 1. Health Check
@@ -895,7 +896,8 @@ async def analyze_and_reinspect(
     if image and image.filename:
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         raw_dir = os.path.join(base_dir, "uploads", "reinspections")
-        os.makedirs(raw_dir, exist_ok=True)        ext = os.path.splitext(image.filename)[1].lower() or ".jpg"
+        os.makedirs(raw_dir, exist_ok=True)
+        ext = os.path.splitext(image.filename)[1].lower() or ".jpg"
         save_name = f"REINSP_{uuid.uuid4().hex[:6]}{ext}"
         save_path = os.path.join(raw_dir, save_name)
         with open(save_path, "wb") as buffer:
@@ -1059,4 +1061,3 @@ def get_live_factory_telemetry(machine_id: str = "M03", product_id: str = "RING-
         "source_label": "OFFLINE",
         "message": "Laptop 2 Virtual Factory is unreachable. Configure LAPTOP2_URL for a second-machine simulator."
     }
-
