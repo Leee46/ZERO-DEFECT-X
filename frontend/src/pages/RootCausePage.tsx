@@ -14,30 +14,43 @@ interface RootCausePageProps {
 
 export const RootCausePage: React.FC<RootCausePageProps> = ({ inspectionId, onNavigate }) => {
   const [rootCauseData, setRootCauseData] = useState<any>(null);
-
-  const inspections = inspectionService.getAllInspections();
-  const targetInspection = inspectionId
-    ? inspectionService.getInspectionById(inspectionId) || inspections[0]
-    : inspections[0];
+  const [targetInspection, setTargetInspection] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
     async function loadBackendAnalysis() {
-      if (targetInspection && targetInspection.id) {
-        try {
-          const res = await apiClient.get<any>(`/root-cause/${targetInspection.id}`);
-          if (res && isMounted) {
-            setRootCauseData(res);
-            return;
-          }
-        } catch (e) {
-          // fallback
+      try {
+        setLoading(true);
+        setError(null);
+        const inspections = await inspectionService.getAllInspectionsAsync();
+        const target = inspectionId
+          ? inspections.find((item) => item.id === inspectionId)
+          : inspections[0];
+
+        if (!target) {
+          throw new Error('No inspection record is available for probable-cause analysis.');
         }
+
+        const res = await apiClient.get<any>(`/root-cause/${target.id}`);
+        if (isMounted) {
+          setTargetInspection(target);
+          setRootCauseData(res);
+        }
+      } catch (e) {
+        if (isMounted) {
+          setError(e instanceof Error ? e.message : 'Unable to load evidence-backed probable-cause analysis.');
+          setTargetInspection(null);
+          setRootCauseData(null);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
       }
     }
     loadBackendAnalysis();
     return () => { isMounted = false; };
-  }, [targetInspection]);
+  }, [inspectionId]);
 
   const probableFactor = rootCauseData?.probable_factor || 'Analysis unavailable';
   const candidates = rootCauseData?.candidate_factors || [];
@@ -57,8 +70,22 @@ export const RootCausePage: React.FC<RootCausePageProps> = ({ inspectionId, onNa
         if (idx === 3) onNavigate('inspection-details', { id: targetInspection.id });
       }} />
 
-      <DemoBanner message="PRODUCTION CONTEXT INTELLIGENCE & PROBABLE-CAUSE ENGINE — Deterministic Multi-Variate Correlation" />
+      <DemoBanner message="PRODUCTION CONTEXT INTELLIGENCE & PROBABLE-CAUSE ENGINE — Evidence-Backed Statistical Association" />
 
+      {loading && (
+        <div className="scada-card">
+          <span className="scada-label">LOADING PROBABLE-CAUSE ANALYSIS...</span>
+        </div>
+      )}
+
+      {!loading && error && (
+        <div className="scada-card" style={{ borderLeft: '4px solid #E55353' }}>
+          <span className="scada-label" style={{ color: '#E55353' }}>ANALYSIS UNAVAILABLE</span>
+          <p style={{ color: '#8D9AAA', marginBottom: 0 }}>{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && targetInspection && (
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.25rem' }}>
         {/* Left Column: Analysis Results */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -68,7 +95,7 @@ export const RootCausePage: React.FC<RootCausePageProps> = ({ inspectionId, onNa
                 <Search className="w-5 h-5 text-system-blue" />
                 <span className="scada-title">PROBABLE CONTRIBUTING FACTOR REPORT</span>
               </div>
-              <Badge status={isNormal ? 'PASSED' : 'EVIDENCE SCORE 84%'} />
+              <Badge status={isNormal ? 'PASSED' : (rootCauseData?.is_insufficient_evidence ? 'INSUFFICIENT EVIDENCE' : 'EVIDENCE REVIEW')} />
             </div>
 
             <div style={{ backgroundColor: '#162235', padding: '1rem', borderRadius: '4px', marginBottom: '1rem' }}>
@@ -222,6 +249,7 @@ export const RootCausePage: React.FC<RootCausePageProps> = ({ inspectionId, onNa
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 };
