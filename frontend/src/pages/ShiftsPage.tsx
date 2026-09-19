@@ -1,17 +1,38 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { apiClient } from '../services/apiClient';
 import { DemoBanner } from '../components/common/DemoBanner';
 import { Clock } from 'lucide-react';
 
 export const ShiftsPage: React.FC = () => {
-  const shifts = [
-    { shift: 'Shift A', hours: '07:00 - 15:00', supervisor: 'J. Miller', inspected: 520, defects: 5, rate: '0.96%' },
-    { shift: 'Shift B', hours: '15:00 - 23:00', supervisor: 'R. Vance', inspected: 480, defects: 28, rate: '5.83%' },
-    { shift: 'Shift C', hours: '23:00 - 07:00', supervisor: 'S. Chen', inspected: 248, defects: 4, rate: '1.61%' }
-  ];
+  const [shifts, setShifts] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    Promise.all([apiClient.get<any[]>('/shifts'), apiClient.get<any[]>('/inspections')])
+      .then(([shiftRows, inspectionRows]) => {
+        const inspections = Array.isArray(inspectionRows) ? inspectionRows : [];
+        const rows = (Array.isArray(shiftRows) ? shiftRows : []).map((shift: any) => {
+          const records = inspections.filter((item: any) => item.shift_id === shift.id);
+          const defects = records.filter((item: any) => item.status === 'DEFECTIVE').length;
+          return {
+            shift: shift.shift_name || shift.id,
+            hours: `${shift.start_time || 'N/A'} - ${shift.end_time || 'N/A'}`,
+            supervisor: shift.operator_name || 'N/A',
+            inspected: records.length,
+            defects,
+            rate: records.length ? `${(defects / records.length * 100).toFixed(2)}%` : '0.00%'
+          };
+        });
+        setShifts(rows);
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : 'Unable to load shift quality data.'));
+  }, []);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       <DemoBanner message="OPERATOR SHIFTS — Performance & Defect Rate Correlation by Work Shift" />
+
+      {error && <div className="scada-card" style={{ borderLeft: '4px solid #E55353' }}><p style={{ color: '#E55353', marginBottom: 0 }}>{error}</p></div>}
 
       <div className="scada-card">
         <div className="scada-header">
