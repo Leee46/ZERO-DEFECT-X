@@ -145,8 +145,17 @@ class InspectionOut(BaseModel):
     annotated_image_url: Optional[str] = None
     inspection_time: Optional[datetime] = None
     status: str
-    overall_confidence: float
+    overall_confidence: Optional[float] = None
     defects: List[DefectOut] = []
+    temperature: Optional[float] = None
+    vibration: Optional[float] = None
+    pressure: Optional[float] = None
+    speed: Optional[int] = None
+    environment_temperature: Optional[float] = None
+    humidity: Optional[float] = None
+    factory_status: Optional[str] = None
+    factory_source_label: Optional[str] = None
+    telemetry_timestamp: Optional[datetime] = None
 
     class Config:
         from_attributes = True
