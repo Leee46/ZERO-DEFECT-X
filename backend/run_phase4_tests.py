@@ -2,7 +2,7 @@ import os
 import json
 import urllib.request
 
-BASE_URL = "http://localhost:8001/api"
+BASE_URL = "http://localhost:8000/api"
 
 def upload_image_test(file_path: str, machine_id: str = "M03") -> dict:
     boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW"
