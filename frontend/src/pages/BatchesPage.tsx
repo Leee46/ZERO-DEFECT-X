@@ -1,13 +1,28 @@
-import React from 'react';
-import { INITIAL_BATCHES } from '../data/mockData';
+import React, { useEffect, useState } from 'react';
+import { apiClient } from '../services/apiClient';
 import { Badge } from '../components/common/Badge';
 import { DemoBanner } from '../components/common/DemoBanner';
 import { Box } from 'lucide-react';
 
 export const BatchesPage: React.FC = () => {
+  const [batches, setBatches] = useState<any[]>([]);
+  const [inspections, setInspections] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    Promise.all([apiClient.get<any[]>('/batches'), apiClient.get<any[]>('/inspections')])
+      .then(([batchRows, inspectionRows]) => {
+        setBatches(Array.isArray(batchRows) ? batchRows : []);
+        setInspections(Array.isArray(inspectionRows) ? inspectionRows : []);
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : 'Unable to load batch records.'));
+  }, []);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       <DemoBanner message="PRODUCTION BATCH MONITOR — Batch Quality Yield & Quarantine Tracking" />
+
+      {error && <div className="scada-card" style={{ borderLeft: '4px solid #E55353' }}><p style={{ color: '#E55353', marginBottom: 0 }}>{error}</p></div>}
 
       <div className="scada-card">
         <div className="scada-header">
@@ -34,20 +49,23 @@ export const BatchesPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {INITIAL_BATCHES.map((b) => {
-                const rate = ((b.defectCount / b.producedQuantity) * 100).toFixed(2);
+              {batches.map((b) => {
+                const batchInspections = inspections.filter((i) => i.batch_id === b.id);
+                const producedQuantity = batchInspections.length;
+                const defectCount = batchInspections.filter((i) => i.status === 'DEFECTIVE').length;
+                const rate = producedQuantity ? ((defectCount / producedQuantity) * 100).toFixed(2) : '0.00';
                 return (
                   <tr key={b.id}>
                     <td className="font-mono" style={{ color: '#4F7CAC', fontWeight: 600 }}>{b.id}</td>
                     <td className="font-mono">{b.productId}</td>
                     <td className="font-mono">{b.machineId}</td>
                     <td className="font-mono">{b.shift}</td>
-                    <td className="font-mono">{b.targetQuantity}</td>
-                    <td className="font-mono">{b.producedQuantity}</td>
-                    <td className="font-mono" style={{ color: b.defectCount > 10 ? '#E55353' : '#22A06B', fontWeight: 700 }}>{b.defectCount}</td>
+                    <td className="font-mono">{producedQuantity || 'N/A'}</td>
+                    <td className="font-mono">{producedQuantity}</td>
+                    <td className="font-mono" style={{ color: b.defectCount > 10 ? '#E55353' : '#22A06B', fontWeight: 700 }}>{defectCount}</td>
                     <td className="font-mono">{rate}%</td>
                     <td><Badge status={b.status} /></td>
-                    <td className="font-mono" style={{ color: '#8D9AAA' }}>{b.startTime}</td>
+                    <td className="font-mono" style={{ color: '#8D9AAA' }}>{b.production_start ? new Date(b.production_start).toLocaleString() : 'N/A'}</td>
                   </tr>
                 );
               })}
