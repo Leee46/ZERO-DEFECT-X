@@ -28,11 +28,23 @@ export const NewInspection: React.FC<NewInspectionProps> = ({ onNavigate }) => {
   const [mobileUrl, setMobileUrl] = useState<string>('http://10.10.56.134:5173/mobile-inspection');
 
   useEffect(() => {
-    // Dynamically detect LAN IP or default to 10.10.56.134
-    const host = typeof window !== 'undefined' ? window.location.hostname : '10.10.56.134';
-    const port = typeof window !== 'undefined' ? window.location.port || '5173' : '5173';
-    const effectiveHost = (host === 'localhost' || host === '127.0.0.1') ? '10.10.56.134' : host;
-    setMobileUrl(`http://${effectiveHost}:${port}/mobile-inspection`);
+    const loadMobileUrl = async () => {
+      try {
+        const network = await apiClient.get<any>('/system/network-info');
+        if (network?.mobile_url) {
+          setMobileUrl(network.mobile_url);
+          return;
+        }
+      } catch {
+        // Fall back to the current browser host without inventing a LAN IP.
+      }
+      if (typeof window !== 'undefined') {
+        const host = window.location.hostname;
+        const port = window.location.port || '5173';
+        setMobileUrl(`http://${host}:${port}/mobile-inspection`);
+      }
+    };
+    loadMobileUrl();
   }, []);
 
   if (isMobilePath) {
@@ -104,16 +116,7 @@ export const NewInspection: React.FC<NewInspectionProps> = ({ onNavigate }) => {
         setIsProcessing(false);
         onNavigate('inspection-details', { id: result.inspection_id || result.id });
       } else {
-        // Run fallback demo inspection
-        const inspection = await inspectionService.runNewInspection(
-          selectedProduct.id,
-          batchId,
-          machineId,
-          shift,
-          'preset_metal_scratch'
-        );
-        setIsProcessing(false);
-        onNavigate('inspection-details', { id: inspection.id });
+        throw new Error('Select or capture a real product image before running the inspection.');
       }
     } catch (err: any) {
       console.error(err);
@@ -176,7 +179,7 @@ export const NewInspection: React.FC<NewInspectionProps> = ({ onNavigate }) => {
               >
                 {SAMPLE_PRODUCTS.map((prod) => (
                   <option key={prod.id} value={prod.id}>
-                    {prod.id} — {prod.name} (Simulates: {prod.defectType})
+                    {prod.id} — {prod.name}
                   </option>
                 ))}
               </select>
