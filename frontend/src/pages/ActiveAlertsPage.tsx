@@ -100,7 +100,7 @@ export const ActiveAlertsPage: React.FC<ActiveAlertsPageProps> = ({ onNavigate }
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <button
                     className="scada-btn scada-btn-secondary scada-btn-sm"
-                    onClick={() => onNavigate('root-cause', { inspectionId: alert.inspectionId })}
+                    onClick={() => onNavigate('risk-monitor')}
                   >
                     <Search size={12} />
                     Investigate
@@ -126,7 +126,6 @@ export const ActiveAlertsPage: React.FC<ActiveAlertsPageProps> = ({ onNavigate }
                     </button>
                   )}
 
-}
                 </div>
               </div>
             </div>
