@@ -169,12 +169,15 @@ class InspectionService {
   }
 
   public async analyzeAndReinspectAsync(formData: FormData): Promise<any> {
-    const response = await fetch('/api/reinspections/analyze', {
+    const base = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api').replace(/\/+$/, '');
+    const apiBase = base.endsWith('/api') ? base : `${base}/api`;
+    const response = await fetch(`${apiBase}/reinspections/analyze`, {
       method: 'POST',
       body: formData
     });
     if (!response.ok) {
-      throw new Error(`Reinspection analysis failed: ${response.statusText}`);
+      const errorBody = await response.json().catch(() => ({}));
+      throw new Error(errorBody.detail || `Reinspection analysis failed: ${response.statusText}`);
     }
     return await response.json();
   }
